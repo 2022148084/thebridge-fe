@@ -901,6 +901,24 @@ export const ItemsPublicSchema = {
     title: 'ItemsPublic'
 } as const;
 
+export const LocationsMapPublicSchema = {
+    properties: {
+        me: {
+            '$ref': '#/components/schemas/UserLocationPublic'
+        },
+        friends: {
+            items: {
+                '$ref': '#/components/schemas/UserLocationPublic'
+            },
+            type: 'array',
+            title: 'Friends'
+        }
+    },
+    type: 'object',
+    required: ['me', 'friends'],
+    title: 'LocationsMapPublic'
+} as const;
+
 export const MessageSchema = {
     properties: {
         message: {
@@ -1212,6 +1230,28 @@ export const UserCreateSchema = {
             ],
             title: 'Avatar Index'
         },
+        lat: {
+            anyOf: [
+                {
+                    type: 'number'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Lat'
+        },
+        lng: {
+            anyOf: [
+                {
+                    type: 'number'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Lng'
+        },
         password: {
             type: 'string',
             maxLength: 128,
@@ -1222,6 +1262,79 @@ export const UserCreateSchema = {
     type: 'object',
     required: ['email', 'password'],
     title: 'UserCreate'
+} as const;
+
+export const UserLocationPublicSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        full_name: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Full Name'
+        },
+        avatar_index: {
+            anyOf: [
+                {
+                    type: 'integer'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Avatar Index'
+        },
+        lat: {
+            anyOf: [
+                {
+                    type: 'number'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Lat'
+        },
+        lng: {
+            anyOf: [
+                {
+                    type: 'number'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Lng'
+        }
+    },
+    type: 'object',
+    required: ['id'],
+    title: 'UserLocationPublic'
+} as const;
+
+export const UserLocationUpdateSchema = {
+    properties: {
+        lat: {
+            type: 'number',
+            title: 'Lat'
+        },
+        lng: {
+            type: 'number',
+            title: 'Lng'
+        }
+    },
+    type: 'object',
+    required: ['lat', 'lng'],
+    title: 'UserLocationUpdate'
 } as const;
 
 export const UserPreferencesPublicSchema = {
@@ -1343,6 +1456,28 @@ export const UserPublicSchema = {
                 }
             ],
             title: 'Avatar Index'
+        },
+        lat: {
+            anyOf: [
+                {
+                    type: 'number'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Lat'
+        },
+        lng: {
+            anyOf: [
+                {
+                    type: 'number'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Lng'
         },
         id: {
             type: 'string',
@@ -1543,6 +1678,28 @@ export const UserUpdateSchema = {
                 }
             ],
             title: 'Avatar Index'
+        },
+        lat: {
+            anyOf: [
+                {
+                    type: 'number'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Lat'
+        },
+        lng: {
+            anyOf: [
+                {
+                    type: 'number'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Lng'
         },
         password: {
             anyOf: [

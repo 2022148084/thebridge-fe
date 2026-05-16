@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import useCustomToast from "@/hooks/useCustomToast"
+import { FIELD_INPUT, FIELD_LABEL, FIGMA_DIALOG } from "@/lib/figma-styles"
 import { cn } from "@/lib/utils"
 import { PlaceAutocomplete } from "./PlaceAutocomplete"
 
@@ -193,14 +194,16 @@ const CreateEventDialog = ({ trigger, onCreated }: CreateEventDialogProps) => {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent
-        className="sm:max-w-5xl"
+        className={cn(FIGMA_DIALOG, "sm:max-w-5xl")}
         onInteractOutside={(e) => {
           const target = e.detail.originalEvent.target as HTMLElement | null
           if (target?.closest?.(".pac-container")) e.preventDefault()
         }}
       >
         <DialogHeader>
-          <DialogTitle>Event generation</DialogTitle>
+          <DialogTitle className="text-2xl text-[#161b24]">
+            Host Event
+          </DialogTitle>
           <DialogDescription>
             함께할 사람들을 위해 모임 정보를 입력해 주세요.
           </DialogDescription>
@@ -214,13 +217,14 @@ const CreateEventDialog = ({ trigger, onCreated }: CreateEventDialogProps) => {
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
+                      <FormLabel className={FIELD_LABEL}>
                         Event title <span className="text-destructive">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
                           placeholder="예) 한강 저녁 러닝"
                           type="text"
+                          className={FIELD_INPUT}
                           {...field}
                         />
                       </FormControl>
@@ -237,7 +241,7 @@ const CreateEventDialog = ({ trigger, onCreated }: CreateEventDialogProps) => {
                     name="sport_type"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>
+                        <FormLabel className={FIELD_LABEL}>
                           Category <span className="text-destructive">*</span>
                         </FormLabel>
                         <Select
@@ -245,7 +249,9 @@ const CreateEventDialog = ({ trigger, onCreated }: CreateEventDialogProps) => {
                           value={field.value ?? ""}
                         >
                           <FormControl>
-                            <SelectTrigger className="w-full">
+                            <SelectTrigger
+                              className={cn(FIELD_INPUT, "w-full")}
+                            >
                               <SelectValue placeholder="선택" />
                             </SelectTrigger>
                           </FormControl>
@@ -267,12 +273,16 @@ const CreateEventDialog = ({ trigger, onCreated }: CreateEventDialogProps) => {
                     name="date"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>
+                        <FormLabel className={FIELD_LABEL}>
                           Date / Time{" "}
                           <span className="text-destructive">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input type="datetime-local" {...field} />
+                          <Input
+                            type="datetime-local"
+                            className={FIELD_INPUT}
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -286,7 +296,7 @@ const CreateEventDialog = ({ trigger, onCreated }: CreateEventDialogProps) => {
                       const city = form.watch("city")
                       return (
                         <FormItem>
-                          <FormLabel>
+                          <FormLabel className={FIELD_LABEL}>
                             Location <span className="text-destructive">*</span>
                           </FormLabel>
                           <FormControl>
@@ -322,7 +332,9 @@ const CreateEventDialog = ({ trigger, onCreated }: CreateEventDialogProps) => {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Description</FormLabel>
+                        <FormLabel className={FIELD_LABEL}>
+                          Description
+                        </FormLabel>
                         <FormControl>
                           <textarea
                             {...field}
@@ -348,7 +360,7 @@ const CreateEventDialog = ({ trigger, onCreated }: CreateEventDialogProps) => {
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-center justify-between">
-                          <FormLabel>
+                          <FormLabel className={FIELD_LABEL}>
                             Capacity <span className="text-destructive">*</span>
                           </FormLabel>
                           <span className="text-muted-foreground text-xs">
@@ -401,7 +413,7 @@ const CreateEventDialog = ({ trigger, onCreated }: CreateEventDialogProps) => {
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-center justify-between">
-                          <FormLabel>
+                          <FormLabel className={FIELD_LABEL}>
                             Duration <span className="text-destructive">*</span>
                           </FormLabel>
                           <span className="text-muted-foreground text-xs">
@@ -454,7 +466,7 @@ const CreateEventDialog = ({ trigger, onCreated }: CreateEventDialogProps) => {
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-center justify-between">
-                          <FormLabel>
+                          <FormLabel className={FIELD_LABEL}>
                             Energy level{" "}
                             <span className="text-destructive">*</span>
                           </FormLabel>
@@ -496,7 +508,7 @@ const CreateEventDialog = ({ trigger, onCreated }: CreateEventDialogProps) => {
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-center justify-between">
-                          <FormLabel>
+                          <FormLabel className={FIELD_LABEL}>
                             Difficulty{" "}
                             <span className="text-destructive">*</span>
                           </FormLabel>

@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
 import { PasswordInput } from "@/components/ui/password-input"
 import useAuth from "@/hooks/useAuth"
+import { FIELD_INPUT, FIELD_LABEL } from "@/lib/figma-styles"
 
 const formSchema = z.object({
   username: z.string().email(),
@@ -59,12 +60,13 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
             name="username"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel className={FIELD_LABEL}>User Email</FormLabel>
                 <FormControl>
                   <Input
                     data-testid="email-input"
-                    placeholder="user@example.com"
+                    placeholder="user@email.com"
                     type="email"
+                    className={FIELD_INPUT}
                     {...field}
                   />
                 </FormControl>
@@ -78,11 +80,12 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Password</FormLabel>
+                <FormLabel className={FIELD_LABEL}>Password</FormLabel>
                 <FormControl>
                   <PasswordInput
                     data-testid="password-input"
                     placeholder="Password"
+                    className={FIELD_INPUT}
                     {...field}
                   />
                 </FormControl>

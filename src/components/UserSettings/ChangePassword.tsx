@@ -15,6 +15,7 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button"
 import { PasswordInput } from "@/components/ui/password-input"
 import useCustomToast from "@/hooks/useCustomToast"
+import { FIELD_INPUT, FIELD_LABEL } from "@/lib/figma-styles"
 import { handleError } from "@/utils"
 
 const formSchema = z
@@ -78,12 +79,13 @@ const ChangePassword = () => {
             name="current_password"
             render={({ field, fieldState }) => (
               <FormItem>
-                <FormLabel>Current Password</FormLabel>
+                <FormLabel className={FIELD_LABEL}>Current Password</FormLabel>
                 <FormControl>
                   <PasswordInput
                     data-testid="current-password-input"
                     placeholder="••••••••"
                     aria-invalid={fieldState.invalid}
+                    className={FIELD_INPUT}
                     {...field}
                   />
                 </FormControl>
@@ -97,12 +99,13 @@ const ChangePassword = () => {
             name="new_password"
             render={({ field, fieldState }) => (
               <FormItem>
-                <FormLabel>New Password</FormLabel>
+                <FormLabel className={FIELD_LABEL}>New Password</FormLabel>
                 <FormControl>
                   <PasswordInput
                     data-testid="new-password-input"
                     placeholder="••••••••"
                     aria-invalid={fieldState.invalid}
+                    className={FIELD_INPUT}
                     {...field}
                   />
                 </FormControl>
@@ -116,12 +119,13 @@ const ChangePassword = () => {
             name="confirm_password"
             render={({ field, fieldState }) => (
               <FormItem>
-                <FormLabel>Confirm Password</FormLabel>
+                <FormLabel className={FIELD_LABEL}>Confirm Password</FormLabel>
                 <FormControl>
                   <PasswordInput
                     data-testid="confirm-password-input"
                     placeholder="••••••••"
                     aria-invalid={fieldState.invalid}
+                    className={FIELD_INPUT}
                     {...field}
                   />
                 </FormControl>

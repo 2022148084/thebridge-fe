@@ -14,36 +14,26 @@ export function Logo({
   asLink = true,
 }: LogoProps) {
   const content =
-    variant === "responsive" ? (
-      <>
-        <span
-          className={cn(
-            "text-lg font-semibold tracking-normal group-data-[collapsible=icon]:hidden",
-            className,
-          )}
-        >
-          Hackathon
-        </span>
-        <span
-          className={cn(
-            "size-7 hidden place-items-center rounded-md bg-primary text-primary-foreground text-xs font-semibold group-data-[collapsible=icon]:grid",
-            className,
-          )}
-        >
-          HT
-        </span>
-      </>
-    ) : (
+    variant === "icon" ? (
       <span
         className={cn(
-          variant === "full"
-            ? "text-xl font-semibold tracking-normal"
-            : "size-7 inline-grid place-items-center rounded-md bg-primary text-primary-foreground text-xs font-semibold",
+          "size-7 inline-grid place-items-center rounded-md bg-primary text-primary-foreground text-xs font-semibold",
           className,
         )}
       >
-        {variant === "full" ? "Wellness Together" : "HT"}
+        HT
       </span>
+    ) : (
+      <img
+        src="/assets/images/wbond-logo.png"
+        alt="WBOND"
+        className={cn(
+          variant === "responsive"
+            ? "h-7 w-auto group-data-[collapsible=icon]:hidden"
+            : "h-8 w-auto",
+          className,
+        )}
+      />
     )
 
   if (!asLink) {

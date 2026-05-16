@@ -1,12 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-import {
-  CalendarDays,
-  History as HistoryIcon,
-  MapPin,
-  Trash2,
-  Users,
-} from "lucide-react"
+import { History as HistoryIcon, Pencil } from "lucide-react"
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
 
@@ -15,14 +9,9 @@ import {
   GatheringsService,
   type ParticipatingGatheringPublic,
 } from "@/client"
-import {
-  SPORT_LABELS,
-  type SportType,
-} from "@/components/Events/CreateEventDialog"
+import EditGatheringDialog from "@/components/Events/EditGatheringDialog"
 import GatheringDetailDialog from "@/components/Events/GatheringDetailDialog"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import {
   Dialog,
   DialogClose,
@@ -48,13 +37,20 @@ export const Route = createFileRoute("/_layout/history")({
   }),
 })
 
-type Role = "host" | "participant"
 type HostItem = { role: "host"; gathering: GatheringPublic }
 type ParticipantItem = {
   role: "participant"
   gathering: ParticipatingGatheringPublic
 }
 type Item = HostItem | ParticipantItem
+
+function isFinished(
+  g: GatheringPublic | ParticipatingGatheringPublic,
+): boolean {
+  const endTime =
+    new Date(g.starts_at).getTime() + (g.duration_min ?? 0) * 60_000
+  return endTime < Date.now()
+}
 
 function HistoryPage() {
   const { user } = useAuth()
@@ -103,23 +99,16 @@ function HistoryPage() {
   })
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">History</h1>
-        <p className="text-muted-foreground">
-          내가 주최했거나 참여한 모임을 한눈에 봐요
-        </p>
-      </div>
-
+    <div className="-mx-6 -my-6 min-h-[calc(100svh-3.5rem-4.5rem)] bg-[#b6e3c8] px-6 py-6 md:-mx-8 md:-my-8 md:px-8 md:py-8">
       {gatheringsQuery.isLoading ? (
-        <p className="text-sm text-muted-foreground">불러오는 중…</p>
+        <p className="text-sm text-[#161b24]/60">불러오는 중…</p>
       ) : items.length === 0 ? (
         <EmptyState
           title="아직 모임 기록이 없어요"
           description="Map에서 새로운 모임을 만들거나 다른 모임에 참여해 보세요"
         />
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item) => (
             <GatheringCard
               key={item.gathering.id}
@@ -186,96 +175,95 @@ function HistoryPage() {
   )
 }
 
-const ROLE_LABEL: Record<Role, string> = {
-  host: "주최",
-  participant: "참여",
-}
-
-const ROLE_CLASS: Record<Role, string> = {
-  host: "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400",
-  participant: "border-sky-500/40 bg-sky-500/10 text-sky-600 dark:text-sky-400",
+function StatusBadge({ finished }: { finished: boolean }) {
+  return (
+    <span
+      className={cn(
+        "inline-block rounded-md px-2 py-0.5 text-xs italic font-medium",
+        finished ? "bg-[#7dc9a0] text-white" : "bg-[#7dc9a0] text-white",
+      )}
+    >
+      {finished ? "finished" : "ongoing"}
+    </span>
+  )
 }
 
 function GatheringCard({
   item,
   onOpen,
-  onDelete,
+  onDelete: _onDelete,
 }: {
   item: Item
   onOpen: () => void
   onDelete?: () => void
 }) {
   const { gathering, role } = item
-  const label =
-    SPORT_LABELS[gathering.sport_type as SportType] ?? gathering.sport_type
+  const finished = isFinished(gathering)
+  const dateText = new Date(gathering.starts_at).toLocaleDateString("sv-SE")
 
   return (
-    <Card className="cursor-pointer py-0 transition-colors hover:bg-accent/30">
-      <CardContent
-        className="flex h-full flex-col gap-2 p-3"
+    <div className="relative rounded-2xl bg-white p-5 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.1)]">
+      <div className="flex items-start justify-between gap-2">
+        <StatusBadge finished={finished} />
+        {role === "host" && (
+          <EditGatheringDialog
+            gathering={gathering as GatheringPublic}
+            trigger={
+              <button
+                type="button"
+                aria-label="모임 편집"
+                className="text-[#44a16f] transition hover:text-[#3a8f60]"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Pencil className="size-5" />
+              </button>
+            }
+          />
+        )}
+      </div>
+
+      <button
+        type="button"
         onClick={onOpen}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault()
-            onOpen()
-          }
-        }}
-        role="button"
-        tabIndex={0}
+        className="mt-3 block w-full text-left"
       >
-        <div className="flex items-center justify-between gap-2">
-          <span
-            className={cn(
-              "shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium",
-              ROLE_CLASS[role],
-            )}
-          >
-            {ROLE_LABEL[role]}
-          </span>
-          {role === "host" && onDelete && (
-            <Button
-              size="icon"
-              variant="ghost"
-              className="size-7 shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
-              aria-label="모임 삭제"
-              onClick={(e) => {
-                e.stopPropagation()
-                onDelete()
-              }}
-            >
-              <Trash2 className="size-4" />
-            </Button>
+        <h3 className="font-['Stack_Sans_Headline'] text-2xl font-bold text-[#161b24]">
+          {gathering.title}
+        </h3>
+      </button>
+
+      <div className="my-3 h-px bg-[#b3b9c2]/40" />
+
+      {finished ? (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-sm text-[#161b24]/70">
+            <span>{dateText}</span>
+          </div>
+          {gathering.description && (
+            <p className="text-sm text-[#161b24] leading-snug">
+              {gathering.description}
+            </p>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          <span className="truncate text-sm font-medium">
-            {gathering.title}
-          </span>
-          <Badge variant="secondary" className="shrink-0">
-            {label}
-          </Badge>
+      ) : (
+        <div className="flex flex-col gap-2 pt-1">
+          <button
+            type="button"
+            onClick={onOpen}
+            className="h-10 w-full rounded-lg bg-[#b6e3c8] font-semibold text-[#161b24] transition hover:bg-[#a3d9b8]"
+          >
+            Check Event Detail & Chat
+          </button>
+          <button
+            type="button"
+            onClick={onOpen}
+            className="h-10 w-full rounded-lg bg-[#f8c4c4] font-semibold text-[#161b24] transition hover:bg-[#f5b0b0]"
+          >
+            Cancel
+          </button>
         </div>
-        <div className="flex flex-col gap-0.5 text-[11px] text-muted-foreground">
-          <span className="inline-flex items-center gap-1">
-            <CalendarDays className="size-3" />
-            {new Date(gathering.starts_at).toLocaleString("ko-KR", {
-              month: "numeric",
-              day: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </span>
-          <span className="inline-flex items-center gap-1 truncate">
-            <MapPin className="size-3 shrink-0" />
-            <span className="truncate">{gathering.place_name}</span>
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <Users className="size-3" />
-            정원 {gathering.max_participants}명
-          </span>
-        </div>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   )
 }
 
@@ -287,12 +275,12 @@ function EmptyState({
   description: string
 }) {
   return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="mb-4 rounded-full bg-muted p-4">
-        <HistoryIcon className="size-8 text-muted-foreground" />
+    <div className="flex flex-col items-center justify-center py-20 text-center">
+      <div className="mb-4 rounded-full bg-white p-4">
+        <HistoryIcon className="size-8 text-[#44a16f]" />
       </div>
-      <h3 className="text-lg font-semibold">{title}</h3>
-      <p className="text-muted-foreground">{description}</p>
+      <h3 className="text-lg font-semibold text-[#161b24]">{title}</h3>
+      <p className="text-[#161b24]/60">{description}</p>
     </div>
   )
 }

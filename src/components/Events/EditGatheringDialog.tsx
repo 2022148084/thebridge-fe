@@ -37,6 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import useCustomToast from "@/hooks/useCustomToast"
+import { FIELD_INPUT, FIELD_LABEL, FIGMA_DIALOG } from "@/lib/figma-styles"
 import { cn } from "@/lib/utils"
 import { handleError } from "@/utils"
 
@@ -131,9 +132,11 @@ export function EditGatheringDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className={cn(FIGMA_DIALOG, "sm:max-w-md")}>
         <DialogHeader>
-          <DialogTitle>모임 수정</DialogTitle>
+          <DialogTitle className="text-2xl text-[#161b24]">
+            모임 수정
+          </DialogTitle>
           <DialogDescription>
             모임 정보를 변경합니다. 장소·종목은 새 모임을 만들어 주세요.
           </DialogDescription>
@@ -148,9 +151,9 @@ export function EditGatheringDialog({
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>제목</FormLabel>
+                  <FormLabel className={FIELD_LABEL}>제목</FormLabel>
                   <FormControl>
-                    <Input type="text" {...field} />
+                    <Input type="text" className={FIELD_INPUT} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -162,7 +165,7 @@ export function EditGatheringDialog({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>설명</FormLabel>
+                  <FormLabel className={FIELD_LABEL}>설명</FormLabel>
                   <FormControl>
                     <textarea
                       rows={3}
@@ -184,9 +187,13 @@ export function EditGatheringDialog({
               name="starts_at"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>일시</FormLabel>
+                  <FormLabel className={FIELD_LABEL}>일시</FormLabel>
                   <FormControl>
-                    <Input type="datetime-local" {...field} />
+                    <Input
+                      type="datetime-local"
+                      className={FIELD_INPUT}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -199,13 +206,13 @@ export function EditGatheringDialog({
                 name="duration_min"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>소요 시간</FormLabel>
+                    <FormLabel className={FIELD_LABEL}>소요 시간</FormLabel>
                     <Select
                       value={String(field.value)}
                       onValueChange={(v) => field.onChange(Number(v))}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className={cn(FIELD_INPUT, "w-full")}>
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
@@ -227,13 +234,13 @@ export function EditGatheringDialog({
                 name="max_participants"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>정원</FormLabel>
+                    <FormLabel className={FIELD_LABEL}>정원</FormLabel>
                     <Select
                       value={String(field.value)}
                       onValueChange={(v) => field.onChange(Number(v))}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className={cn(FIELD_INPUT, "w-full")}>
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
@@ -256,13 +263,13 @@ export function EditGatheringDialog({
               name="level"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>난이도</FormLabel>
+                  <FormLabel className={FIELD_LABEL}>난이도</FormLabel>
                   <Select
                     value={String(field.value)}
                     onValueChange={(v) => field.onChange(Number(v))}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className={cn(FIELD_INPUT, "w-full")}>
                         <SelectValue />
                       </SelectTrigger>
                     </FormControl>

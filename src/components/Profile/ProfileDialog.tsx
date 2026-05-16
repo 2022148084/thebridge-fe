@@ -1,10 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { Check } from "lucide-react"
 import { type ReactNode, useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
 import { UsersService, type UserUpdateMe } from "@/client"
+import UserAvatar from "@/components/Profile/UserAvatar"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -33,6 +35,9 @@ import {
 } from "@/components/ui/select"
 import useAuth from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
+import { AVATARS } from "@/lib/avatars"
+import { FIELD_INPUT, FIELD_LABEL, FIGMA_DIALOG } from "@/lib/figma-styles"
+import { cn } from "@/lib/utils"
 import { handleError } from "@/utils"
 
 const SEX_OPTIONS = [
@@ -59,6 +64,12 @@ const formSchema = z.object({
     .string()
     .max(255, { message: "City must be 255 characters or fewer" })
     .optional(),
+  avatar_index: z
+    .number()
+    .int()
+    .min(0)
+    .max(AVATARS.length - 1)
+    .optional(),
 })
 
 type FormData = z.infer<typeof formSchema>
@@ -73,6 +84,8 @@ function defaultsFromUser(user: ReturnType<typeof useAuth>["user"]): FormData {
         ? (String(user.sex) as "0" | "1" | "2")
         : undefined,
     city: user?.city ?? "",
+    avatar_index:
+      typeof user?.avatar_index === "number" ? user.avatar_index : undefined,
   }
 }
 
@@ -117,6 +130,7 @@ export function ProfileDialog({ trigger }: ProfileDialogProps) {
       age: data.age ? Number(data.age) : null,
       sex: data.sex ? Number(data.sex) : null,
       city: data.city?.trim() ? data.city.trim() : null,
+      avatar_index: data.avatar_index ?? null,
     }
     mutation.mutate(payload)
   }
@@ -124,64 +138,32 @@ export function ProfileDialog({ trigger }: ProfileDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className={cn(FIGMA_DIALOG, "sm:max-w-3xl")}>
         <DialogHeader>
-          <DialogTitle>Edit profile</DialogTitle>
+          <DialogTitle className="text-2xl text-[#161b24]">
+            Edit Your Profile
+          </DialogTitle>
           <DialogDescription>
-            Update your personal information.
+            Update your personal information and pick an avatar.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="flex flex-col gap-4"
+            className="grid gap-6 md:grid-cols-[1fr_auto]"
           >
-            <FormField
-              control={form.control}
-              name="full_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Full Name</FormLabel>
-                  <FormControl>
-                    <Input type="text" placeholder="User" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="user@example.com"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-4">
               <FormField
                 control={form.control}
-                name="age"
+                name="full_name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Age</FormLabel>
+                    <FormLabel className={FIELD_LABEL}>Full Name</FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
-                        inputMode="numeric"
-                        min={1}
-                        max={120}
-                        placeholder="25"
+                        type="text"
+                        placeholder="John Doe"
+                        className={FIELD_INPUT}
                         {...field}
                       />
                     </FormControl>
@@ -192,27 +174,89 @@ export function ProfileDialog({ trigger }: ProfileDialogProps) {
 
               <FormField
                 control={form.control}
-                name="sex"
+                name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Sex</FormLabel>
-                    <Select
-                      value={field.value ?? ""}
-                      onValueChange={field.onChange}
-                    >
+                    <FormLabel className={FIELD_LABEL}>User Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="user@email.com"
+                        className={FIELD_INPUT}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="age"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className={FIELD_LABEL}>Age</FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
+                        <Input
+                          type="number"
+                          inputMode="numeric"
+                          min={1}
+                          max={120}
+                          placeholder="25"
+                          className={FIELD_INPUT}
+                          {...field}
+                        />
                       </FormControl>
-                      <SelectContent>
-                        {SEX_OPTIONS.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="sex"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className={FIELD_LABEL}>Gender</FormLabel>
+                      <Select
+                        value={field.value ?? ""}
+                        onValueChange={field.onChange}
+                      >
+                        <FormControl>
+                          <SelectTrigger className={cn(FIELD_INPUT, "w-full")}>
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {SEX_OPTIONS.map((opt) => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="city"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className={FIELD_LABEL}>City</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="text"
+                        placeholder="Seoul"
+                        className={FIELD_INPUT}
+                        {...field}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -221,19 +265,45 @@ export function ProfileDialog({ trigger }: ProfileDialogProps) {
 
             <FormField
               control={form.control}
-              name="city"
+              name="avatar_index"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>City</FormLabel>
-                  <FormControl>
-                    <Input type="text" placeholder="Seoul" {...field} />
-                  </FormControl>
+                <FormItem className="md:w-72 md:border-l md:border-[#b3b9c2] md:pl-6">
+                  <FormLabel className={FIELD_LABEL}>
+                    Select your avatar
+                  </FormLabel>
+                  <div className="grid grid-cols-4 gap-3">
+                    {AVATARS.map((_, idx) => {
+                      const selected = field.value === idx
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => field.onChange(idx)}
+                          aria-label={`Avatar ${idx + 1}`}
+                          aria-pressed={selected}
+                          className={cn(
+                            "relative flex aspect-square items-center justify-center rounded-full ring-offset-2 ring-offset-background transition",
+                            selected
+                              ? "ring-2 ring-[#44a16f]"
+                              : "hover:opacity-80",
+                          )}
+                        >
+                          <UserAvatar avatarIndex={idx} className="size-full" />
+                          {selected && (
+                            <span className="absolute -right-1 -bottom-1 flex size-5 items-center justify-center rounded-full bg-[#44a16f] text-white">
+                              <Check className="size-3" />
+                            </span>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex justify-end gap-2 pt-2 md:col-span-2">
               <Button
                 type="button"
                 variant="outline"

@@ -6,7 +6,7 @@ import {
   Marker,
   useMap,
 } from "@vis.gl/react-google-maps"
-import { RefreshCw, Send, Sparkles, X } from "lucide-react"
+import { MessageCircle, RefreshCw, Send, X } from "lucide-react"
 import { Fragment, useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
@@ -219,12 +219,13 @@ function MapPage() {
                 position={{ lat: g.lat, lng: g.lng }}
                 title={g.title}
                 icon={{
-                  path: google.maps.SymbolPath.CIRCLE,
-                  scale: 10,
-                  fillColor: "#EF4444",
+                  path: "M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z",
+                  fillColor: "#F58F8F",
                   fillOpacity: 1,
                   strokeColor: "#ffffff",
                   strokeWeight: 2,
+                  scale: 1,
+                  anchor: new google.maps.Point(12, 36),
                 }}
                 onClick={() => setSelectedId(g.id)}
               />
@@ -234,7 +235,7 @@ function MapPage() {
           <Button
             variant="secondary"
             size="icon"
-            className="absolute top-3 right-3 z-10 shadow-md"
+            className="absolute top-3 right-3 z-10 rounded-full border border-[#b3b9c2]/40 bg-white/85 text-[#161b24] shadow-[0_4px_12px_-4px_rgba(0,0,0,0.15)] backdrop-blur-[8px] hover:bg-white"
             onClick={fetchLocation}
             disabled={loading}
             aria-label="현재 위치 새로고침"
@@ -242,14 +243,22 @@ function MapPage() {
             <RefreshCw className={loading ? "animate-spin" : ""} />
           </Button>
           {!chatOpen && (
-            <Button
-              size="icon"
-              className="absolute right-4 bottom-4 z-10 h-14 w-14 rounded-full shadow-lg"
+            <button
+              type="button"
               onClick={() => setChatOpen(true)}
               aria-label="AI 챗봇 열기"
+              className="absolute right-4 bottom-4 z-10 flex w-[130px] flex-col items-center rounded-[20px] border border-[#b3b9c2]/40 bg-white/86 px-2 pt-2 pb-1 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.2)] backdrop-blur-[12px] transition hover:bg-white"
             >
-              <Sparkles className="size-6" />
-            </Button>
+              <span className="flex items-center gap-1.5 font-['Stack_Sans_Headline'] text-[14px] font-medium text-[#161b24]">
+                AI Coach
+                <MessageCircle className="size-3.5 text-[#161b24]/70" />
+              </span>
+              <img
+                src="/assets/images/ai-coach-avatar.png"
+                alt="AI Coach"
+                className="-mt-1 size-[110px] object-contain"
+              />
+            </button>
           )}
         </APIProvider>
         <GatheringDetailDialog
@@ -265,68 +274,96 @@ function MapPage() {
         />
       </div>
       {chatOpen && (
-        <aside className="flex h-full w-1/3 shrink-0 flex-col border-l bg-background">
-          <div className="flex h-12 shrink-0 items-center justify-between border-b px-4">
-            <span className="font-semibold">AI Chat</span>
+        <aside className="flex h-full w-1/3 shrink-0 flex-col border-l border-[#b3b9c2]/30 bg-[#f1f2f4]">
+          <div className="flex h-12 shrink-0 items-center justify-between border-b border-[#b3b9c2]/30 bg-white px-4">
+            <span className="font-['Stack_Sans_Headline'] font-semibold text-[#44a16f]">
+              AI Coach
+            </span>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setChatOpen(false)}
               aria-label="챗봇 닫기"
+              className="text-[#44a16f] hover:bg-[#44a16f]/10 hover:text-[#44a16f]"
             >
               <X />
             </Button>
           </div>
-          <div className="flex-1 space-y-3 overflow-auto p-4">
+          <div className="flex-1 space-y-4 overflow-auto p-4">
             {chatHistoryQuery.isLoading ? (
-              <p className="text-muted-foreground text-sm">불러오는 중…</p>
+              <p className="text-center text-sm text-[#979797]">불러오는 중…</p>
             ) : messages.length === 0 ? (
-              <p className="text-muted-foreground text-sm">
+              <p className="text-center text-sm text-[#979797]">
                 무엇이든 물어보세요.
               </p>
             ) : (
-              messages.map((m) => {
-                const recs = recommendationsByMsg[m.id]
-                return (
-                  <Fragment key={m.id}>
-                    <div
-                      className={cn(
-                        "flex",
-                        m.role === "user" ? "justify-end" : "justify-start",
-                      )}
-                    >
+              <>
+                <div className="flex items-center gap-3 py-2">
+                  <div className="h-px flex-1 bg-[#b3b9c2]/40" />
+                  <span className="text-xs text-[#979797]">
+                    Today,{" "}
+                    {new Date().toLocaleDateString("en-US", {
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </span>
+                  <div className="h-px flex-1 bg-[#b3b9c2]/40" />
+                </div>
+                {messages.map((m) => {
+                  const recs = recommendationsByMsg[m.id]
+                  const isUser = m.role === "user"
+                  const time = m.created_at
+                    ? new Date(m.created_at).toLocaleTimeString("en-US", {
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })
+                    : ""
+                  return (
+                    <Fragment key={m.id}>
                       <div
                         className={cn(
-                          "max-w-[80%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap",
-                          m.role === "user"
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted",
+                          "flex flex-col",
+                          isUser ? "items-end" : "items-start",
                         )}
                       >
-                        {m.message}
+                        <div
+                          className={cn(
+                            "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap",
+                            isUser
+                              ? "bg-[#5fc295] text-white"
+                              : "bg-white text-[#161b24]",
+                          )}
+                        >
+                          {m.message}
+                        </div>
+                        {time && (
+                          <span className="mt-1 px-1 text-[11px] text-[#979797]">
+                            {time}
+                          </span>
+                        )}
                       </div>
-                    </div>
-                    {recs && recs.length > 0 && (
-                      <div className="flex flex-col gap-2">
-                        {recs.map((rec) => (
-                          <GatheringRecommendCard
-                            key={rec.id}
-                            gathering={rec}
-                            joined={hasJoined(rec.id)}
-                            onSelect={setSelectedId}
-                            onJoined={markJoined}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </Fragment>
-                )
-              })
+                      {recs && recs.length > 0 && (
+                        <div className="flex flex-col gap-2">
+                          {recs.map((rec) => (
+                            <GatheringRecommendCard
+                              key={rec.id}
+                              gathering={rec}
+                              joined={hasJoined(rec.id)}
+                              onSelect={setSelectedId}
+                              onJoined={markJoined}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </Fragment>
+                  )
+                })}
+              </>
             )}
             <div ref={messagesEndRef} />
           </div>
           <form
-            className="flex shrink-0 items-center gap-2 border-t p-3"
+            className="flex shrink-0 items-center gap-2 border-t border-[#b3b9c2]/30 bg-white p-3"
             onSubmit={(e) => {
               e.preventDefault()
               sendMessage()
@@ -335,18 +372,19 @@ function MapPage() {
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="메시지를 입력하세요"
+              placeholder="Type Message..."
               aria-label="메시지 입력"
               disabled={sendMutation.isPending}
+              className="h-11 rounded-full border-[#b3b9c2]/40 bg-[#f1f2f4] px-4 text-[#161b24] shadow-none placeholder:text-[#979797] focus-visible:border-[#44a16f] focus-visible:ring-[#44a16f]/30"
             />
-            <Button
+            <button
               type="submit"
-              size="icon"
               disabled={!input.trim() || sendMutation.isPending}
               aria-label="전송"
+              className="flex size-10 shrink-0 items-center justify-center text-[#161b24] transition hover:text-[#44a16f] disabled:opacity-40"
             >
-              <Send />
-            </Button>
+              <Send className="size-5" />
+            </button>
           </form>
         </aside>
       )}

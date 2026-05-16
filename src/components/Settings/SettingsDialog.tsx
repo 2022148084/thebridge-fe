@@ -12,6 +12,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { FIGMA_DIALOG } from "@/lib/figma-styles"
+import { cn } from "@/lib/utils"
 
 interface SettingsDialogProps {
   trigger: ReactNode
@@ -23,9 +25,11 @@ export function SettingsDialog({ trigger }: SettingsDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className={cn(FIGMA_DIALOG, "sm:max-w-lg")}>
         <DialogHeader>
-          <DialogTitle>Settings</DialogTitle>
+          <DialogTitle className="text-2xl text-[#161b24]">
+            Settings
+          </DialogTitle>
           <DialogDescription>
             Manage your password and account.
           </DialogDescription>

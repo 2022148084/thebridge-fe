@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { ChatSendMessageData, ChatSendMessageResponse, ChatGetChatHistoryResponse, ChatGetPreferencesResponse, FriendsReadFriendsData, FriendsReadFriendsResponse, FriendsReadFriendRequestsData, FriendsReadFriendRequestsResponse, FriendsAddFriendData, FriendsAddFriendResponse, FriendsDeleteFriendData, FriendsDeleteFriendResponse, FriendsAcceptFriendRequestData, FriendsAcceptFriendRequestResponse, FriendsRejectFriendRequestData, FriendsRejectFriendRequestResponse, GatheringsGetRecommendedGatheringsData, GatheringsGetRecommendedGatheringsResponse, GatheringsReadGatheringsData, GatheringsReadGatheringsResponse, GatheringsCreateGatheringData, GatheringsCreateGatheringResponse, GatheringsReadMyParticipatingGatheringsData, GatheringsReadMyParticipatingGatheringsResponse, GatheringsReadGatheringData, GatheringsReadGatheringResponse, GatheringsUpdateGatheringData, GatheringsUpdateGatheringResponse, GatheringsDeleteGatheringData, GatheringsDeleteGatheringResponse, GatheringsJoinGatheringData, GatheringsJoinGatheringResponse, GatheringsCancelJoinGatheringData, GatheringsCancelJoinGatheringResponse, ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersSearchUsersData, UsersSearchUsersResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { ChatSendMessageData, ChatSendMessageResponse, ChatGetChatHistoryResponse, ChatGetPreferencesResponse, FriendsReadFriendsData, FriendsReadFriendsResponse, FriendsReadFriendRequestsData, FriendsReadFriendRequestsResponse, FriendsAddFriendData, FriendsAddFriendResponse, FriendsDeleteFriendData, FriendsDeleteFriendResponse, FriendsAcceptFriendRequestData, FriendsAcceptFriendRequestResponse, FriendsRejectFriendRequestData, FriendsRejectFriendRequestResponse, GatheringsGetRecommendedGatheringsData, GatheringsGetRecommendedGatheringsResponse, GatheringsReadGatheringsData, GatheringsReadGatheringsResponse, GatheringsCreateGatheringData, GatheringsCreateGatheringResponse, GatheringsReadMyParticipatingGatheringsData, GatheringsReadMyParticipatingGatheringsResponse, GatheringsReadGatheringData, GatheringsReadGatheringResponse, GatheringsUpdateGatheringData, GatheringsUpdateGatheringResponse, GatheringsDeleteGatheringData, GatheringsDeleteGatheringResponse, GatheringsJoinGatheringData, GatheringsJoinGatheringResponse, GatheringsCancelJoinGatheringData, GatheringsCancelJoinGatheringResponse, ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersGetLocationMapResponse, UsersUpdateUserLocationData, UsersUpdateUserLocationResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersSearchUsersData, UsersSearchUsersResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsHealthCheckResponse } from './types.gen';
 
 export class ChatService {
     /**
@@ -598,6 +598,39 @@ export class UsersService {
         return __request(OpenAPI, {
             method: 'PATCH',
             url: '/api/v1/users/me',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Get Location Map
+     * Get current user's location and all accepted friends' locations.
+     * @returns LocationsMapPublic Successful Response
+     * @throws ApiError
+     */
+    public static getLocationMap(): CancelablePromise<UsersGetLocationMapResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/users/me/location'
+        });
+    }
+    
+    /**
+     * Update User Location
+     * Update current user's GPS location.
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns UserPublic Successful Response
+     * @throws ApiError
+     */
+    public static updateUserLocation(data: UsersUpdateUserLocationData): CancelablePromise<UsersUpdateUserLocationResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/users/me/location',
             body: data.requestBody,
             mediaType: 'application/json',
             errors: {

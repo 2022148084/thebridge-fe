@@ -20,6 +20,7 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button"
 import useAuth from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
+import { FIGMA_DIALOG } from "@/lib/figma-styles"
 import { cn } from "@/lib/utils"
 import { handleError } from "@/utils"
 
@@ -94,6 +95,7 @@ export function GatheringDetailDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
+          FIGMA_DIALOG,
           "max-h-[90vh] overflow-hidden",
           canChat ? "sm:max-w-3xl" : "sm:max-w-md",
         )}

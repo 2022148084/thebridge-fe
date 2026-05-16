@@ -1,8 +1,8 @@
 import { Link as RouterLink, useRouterState } from "@tanstack/react-router"
 import {
-  History,
+  CalendarDays,
+  Home,
   type LucideIcon,
-  MapPin,
   Plus,
   Settings,
   UserRound,
@@ -24,15 +24,15 @@ type NavItem = {
 }
 
 const baseItems: NavItem[] = [
-  { icon: MapPin, title: "Map", path: "/map" },
+  { icon: Home, title: "Home", path: "/map" },
   { icon: UsersRound, title: "Friends", path: "/friends" },
   { icon: UserRound, title: "Profile", path: "__profile__" },
-  { icon: History, title: "History", path: "/history" },
+  { icon: CalendarDays, title: "History", path: "/history" },
   { icon: Settings, title: "Settings", path: "__settings__" },
 ]
 
 const navItemClass =
-  "flex flex-col items-center gap-1 rounded-md px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+  "flex items-center justify-center rounded-md p-2 text-[#161b24]/50 transition-colors hover:text-[#44a16f]"
 
 export function BottomNav() {
   const { user } = useAuth()
@@ -44,7 +44,7 @@ export function BottomNav() {
     : baseItems
 
   return (
-    <nav className="sticky bottom-0 z-10 flex h-16 items-center justify-between border-t bg-background px-4">
+    <nav className="sticky bottom-0 z-10 flex h-[72px] items-center justify-between border-t border-[#b3b9c2]/30 bg-white px-4 shadow-[0_-4px_30px_-10px_rgba(0,0,0,0.1)]">
       <ul className="flex flex-1 items-center justify-start gap-1">
         {items.map((item) => {
           const Icon = item.icon
@@ -58,9 +58,9 @@ export function BottomNav() {
                       type="button"
                       className={navItemClass}
                       data-testid="profile-button"
+                      aria-label={item.title}
                     >
-                      <Icon className="size-5" />
-                      <span>{item.title}</span>
+                      <Icon className="size-6" />
                     </button>
                   }
                 />
@@ -77,9 +77,9 @@ export function BottomNav() {
                       type="button"
                       className={navItemClass}
                       data-testid="settings-button"
+                      aria-label={item.title}
                     >
-                      <Icon className="size-5" />
-                      <span>{item.title}</span>
+                      <Icon className="size-6" />
                     </button>
                   }
                 />
@@ -91,10 +91,10 @@ export function BottomNav() {
             <li key={item.path}>
               <RouterLink
                 to={item.path}
-                className={cn(navItemClass, isActive && "text-foreground")}
+                aria-label={item.title}
+                className={cn(navItemClass, isActive && "text-[#44a16f]")}
               >
-                <Icon className="size-5" />
-                <span>{item.title}</span>
+                <Icon className="size-6" />
               </RouterLink>
             </li>
           )
@@ -106,11 +106,11 @@ export function BottomNav() {
             trigger={
               <Button
                 size="icon"
-                className="h-12 w-12 rounded-full shadow-md"
+                className="h-14 w-14 rounded-full bg-[#44a16f] text-white shadow-[0_4px_12px_rgba(68,161,111,0.4)] hover:bg-[#3a8f60]"
                 aria-label="Create gathering"
                 data-testid="create-gathering"
               >
-                <Plus className="size-5" />
+                <Plus className="size-6" />
               </Button>
             }
           />

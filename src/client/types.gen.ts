@@ -168,6 +168,11 @@ export type ItemUpdate = {
     description?: (string | null);
 };
 
+export type LocationsMapPublic = {
+    me: UserLocationPublic;
+    friends: Array<UserLocationPublic>;
+};
+
 export type Message = {
     message: string;
 };
@@ -227,7 +232,22 @@ export type UserCreate = {
     sex?: (number | null);
     city?: (string | null);
     avatar_index?: (number | null);
+    lat?: (number | null);
+    lng?: (number | null);
     password: string;
+};
+
+export type UserLocationPublic = {
+    id: string;
+    full_name?: (string | null);
+    avatar_index?: (number | null);
+    lat?: (number | null);
+    lng?: (number | null);
+};
+
+export type UserLocationUpdate = {
+    lat: number;
+    lng: number;
 };
 
 export type UserPreferencesPublic = {
@@ -245,6 +265,8 @@ export type UserPublic = {
     sex?: (number | null);
     city?: (string | null);
     avatar_index?: (number | null);
+    lat?: (number | null);
+    lng?: (number | null);
     id: string;
     created_at?: (string | null);
     updated_at?: (string | null);
@@ -274,6 +296,8 @@ export type UserUpdate = {
     sex?: (number | null);
     city?: (string | null);
     avatar_index?: (number | null);
+    lat?: (number | null);
+    lng?: (number | null);
     password?: (string | null);
 };
 
@@ -466,6 +490,14 @@ export type UsersUpdateUserMeData = {
 };
 
 export type UsersUpdateUserMeResponse = (UserPublic);
+
+export type UsersGetLocationMapResponse = (LocationsMapPublic);
+
+export type UsersUpdateUserLocationData = {
+    requestBody: UserLocationUpdate;
+};
+
+export type UsersUpdateUserLocationResponse = (UserPublic);
 
 export type UsersUpdatePasswordMeData = {
     requestBody: UpdatePassword;

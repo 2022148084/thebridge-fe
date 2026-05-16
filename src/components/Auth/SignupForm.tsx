@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/select"
 import useAuth from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
+import { FIELD_INPUT, FIELD_LABEL } from "@/lib/figma-styles"
+import { cn } from "@/lib/utils"
 
 const SEX_OPTIONS = [
   { value: "0", label: "Prefer not to say" },
@@ -115,12 +117,13 @@ export function SignupForm({ onSwitchToLogin, onSuccess }: SignupFormProps) {
             name="full_name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Full Name</FormLabel>
+                <FormLabel className={FIELD_LABEL}>Full Name</FormLabel>
                 <FormControl>
                   <Input
                     data-testid="full-name-input"
-                    placeholder="User"
+                    placeholder="John Doe"
                     type="text"
+                    className={FIELD_INPUT}
                     {...field}
                   />
                 </FormControl>
@@ -134,12 +137,13 @@ export function SignupForm({ onSwitchToLogin, onSuccess }: SignupFormProps) {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel className={FIELD_LABEL}>User Email</FormLabel>
                 <FormControl>
                   <Input
                     data-testid="email-input"
-                    placeholder="user@example.com"
+                    placeholder="user@email.com"
                     type="email"
+                    className={FIELD_INPUT}
                     {...field}
                   />
                 </FormControl>
@@ -154,7 +158,7 @@ export function SignupForm({ onSwitchToLogin, onSuccess }: SignupFormProps) {
               name="age"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Age</FormLabel>
+                  <FormLabel className={FIELD_LABEL}>Age</FormLabel>
                   <FormControl>
                     <Input
                       data-testid="age-input"
@@ -163,6 +167,7 @@ export function SignupForm({ onSwitchToLogin, onSuccess }: SignupFormProps) {
                       inputMode="numeric"
                       min={1}
                       max={120}
+                      className={FIELD_INPUT}
                       {...field}
                     />
                   </FormControl>
@@ -176,13 +181,16 @@ export function SignupForm({ onSwitchToLogin, onSuccess }: SignupFormProps) {
               name="sex"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Sex</FormLabel>
+                  <FormLabel className={FIELD_LABEL}>Gender</FormLabel>
                   <Select
                     value={field.value ?? ""}
                     onValueChange={field.onChange}
                   >
                     <FormControl>
-                      <SelectTrigger data-testid="sex-select">
+                      <SelectTrigger
+                        data-testid="sex-select"
+                        className={cn(FIELD_INPUT, "w-full")}
+                      >
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                     </FormControl>
@@ -205,12 +213,13 @@ export function SignupForm({ onSwitchToLogin, onSuccess }: SignupFormProps) {
             name="city"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>City</FormLabel>
+                <FormLabel className={FIELD_LABEL}>City</FormLabel>
                 <FormControl>
                   <Input
                     data-testid="city-input"
                     placeholder="Seoul"
                     type="text"
+                    className={FIELD_INPUT}
                     {...field}
                   />
                 </FormControl>
@@ -224,11 +233,12 @@ export function SignupForm({ onSwitchToLogin, onSuccess }: SignupFormProps) {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Password</FormLabel>
+                <FormLabel className={FIELD_LABEL}>Password</FormLabel>
                 <FormControl>
                   <PasswordInput
                     data-testid="password-input"
                     placeholder="Password"
+                    className={FIELD_INPUT}
                     {...field}
                   />
                 </FormControl>
@@ -242,11 +252,12 @@ export function SignupForm({ onSwitchToLogin, onSuccess }: SignupFormProps) {
             name="confirm_password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Confirm Password</FormLabel>
+                <FormLabel className={FIELD_LABEL}>Confirm Password</FormLabel>
                 <FormControl>
                   <PasswordInput
                     data-testid="confirm-password-input"
                     placeholder="Confirm Password"
+                    className={FIELD_INPUT}
                     {...field}
                   />
                 </FormControl>
