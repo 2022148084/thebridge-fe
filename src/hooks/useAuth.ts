@@ -8,7 +8,6 @@ import {
   type UserRegister,
   UsersService,
 } from "@/client"
-import { clearJoinedGatherings } from "@/lib/joinedGatherings"
 import { handleError } from "@/utils"
 import useCustomToast from "./useCustomToast"
 
@@ -58,7 +57,6 @@ const useAuth = () => {
   const logout = () => {
     localStorage.removeItem("access_token")
     localStorage.removeItem("chat-recommendations")
-    clearJoinedGatherings()
     queryClient.clear()
     navigate({ to: "/login" })
   }

@@ -62,11 +62,7 @@ function MapPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [recommendationsByMsg, setRecommendationsByMsg] =
     useState<Record<string, GatheringRecommendPublic[]>>(loadRecsFromStorage)
-  const {
-    has: hasJoined,
-    add: addJoined,
-    remove: removeJoined,
-  } = useJoinedGatherings()
+  const { has: hasJoined, markJoined, markUnjoined } = useJoinedGatherings()
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -263,8 +259,8 @@ function MapPage() {
             if (!open) setSelectedId(null)
           }}
           onJoinedChange={(g, joined) => {
-            if (joined) addJoined(g)
-            else removeJoined(g.id)
+            if (joined) markJoined(g)
+            else markUnjoined(g.id)
           }}
         />
       </div>
@@ -318,7 +314,7 @@ function MapPage() {
                             gathering={rec}
                             joined={hasJoined(rec.id)}
                             onSelect={setSelectedId}
-                            onJoined={addJoined}
+                            onJoined={markJoined}
                           />
                         ))}
                       </div>

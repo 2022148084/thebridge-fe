@@ -952,6 +952,151 @@ export const ParticipantPublicSchema = {
     title: 'ParticipantPublic'
 } as const;
 
+export const ParticipatingGatheringPublicSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        host_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Host Id'
+        },
+        title: {
+            type: 'string',
+            title: 'Title'
+        },
+        place_name: {
+            type: 'string',
+            title: 'Place Name'
+        },
+        city: {
+            type: 'string',
+            title: 'City'
+        },
+        lat: {
+            type: 'number',
+            title: 'Lat'
+        },
+        lng: {
+            type: 'number',
+            title: 'Lng'
+        },
+        sport_type: {
+            type: 'string',
+            title: 'Sport Type'
+        },
+        starts_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Starts At'
+        },
+        duration_min: {
+            type: 'integer',
+            title: 'Duration Min'
+        },
+        max_participants: {
+            type: 'integer',
+            title: 'Max Participants'
+        },
+        level: {
+            type: 'integer',
+            title: 'Level'
+        },
+        vibe: {
+            items: {
+                type: 'string'
+            },
+            type: 'array',
+            title: 'Vibe'
+        },
+        description: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Description'
+        },
+        status: {
+            type: 'integer',
+            title: 'Status'
+        },
+        created_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Created At'
+        },
+        updated_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Updated At'
+        },
+        participant_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Participant Id'
+        },
+        participant_status: {
+            type: 'string',
+            title: 'Participant Status'
+        },
+        joined_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Joined At'
+        }
+    },
+    type: 'object',
+    required: ['id', 'host_id', 'title', 'place_name', 'city', 'lat', 'lng', 'sport_type', 'starts_at', 'duration_min', 'max_participants', 'level', 'vibe', 'description', 'status', 'created_at', 'updated_at', 'participant_id', 'participant_status', 'joined_at'],
+    title: 'ParticipatingGatheringPublic'
+} as const;
+
+export const ParticipatingGatheringsPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/ParticipatingGatheringPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['data', 'count'],
+    title: 'ParticipatingGatheringsPublic'
+} as const;
+
 export const TokenSchema = {
     properties: {
         access_token: {
@@ -1054,6 +1199,18 @@ export const UserCreateSchema = {
                 }
             ],
             title: 'City'
+        },
+        avatar_index: {
+            anyOf: [
+                {
+                    type: 'integer',
+                    minimum: 0
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Avatar Index'
         },
         password: {
             type: 'string',
@@ -1175,6 +1332,18 @@ export const UserPublicSchema = {
             ],
             title: 'City'
         },
+        avatar_index: {
+            anyOf: [
+                {
+                    type: 'integer',
+                    minimum: 0
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Avatar Index'
+        },
         id: {
             type: 'string',
             format: 'uuid',
@@ -1271,6 +1440,18 @@ export const UserRegisterSchema = {
                 }
             ],
             title: 'City'
+        },
+        avatar_index: {
+            anyOf: [
+                {
+                    type: 'integer',
+                    minimum: 0
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Avatar Index'
         }
     },
     type: 'object',
@@ -1350,6 +1531,18 @@ export const UserUpdateSchema = {
                 }
             ],
             title: 'City'
+        },
+        avatar_index: {
+            anyOf: [
+                {
+                    type: 'integer',
+                    minimum: 0
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Avatar Index'
         },
         password: {
             anyOf: [
@@ -1431,6 +1624,18 @@ export const UserUpdateMeSchema = {
                 }
             ],
             title: 'City'
+        },
+        avatar_index: {
+            anyOf: [
+                {
+                    type: 'integer',
+                    minimum: 0
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Avatar Index'
         }
     },
     type: 'object',

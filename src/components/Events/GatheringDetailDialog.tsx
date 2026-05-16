@@ -5,6 +5,7 @@ import {
   SPORT_LABELS,
   type SportType,
 } from "@/components/Events/CreateEventDialog"
+import EditGatheringDialog from "@/components/Events/EditGatheringDialog"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -15,6 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { LoadingButton } from "@/components/ui/loading-button"
+import useAuth from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 
@@ -33,6 +35,7 @@ export function GatheringDetailDialog({
 }: GatheringDetailDialogProps) {
   const open = gatheringId !== null
   const queryClient = useQueryClient()
+  const { user } = useAuth()
   const { showSuccessToast, showErrorToast } = useCustomToast()
 
   const { data: gathering, isLoading } = useQuery({
@@ -61,6 +64,7 @@ export function GatheringDetailDialog({
     onSuccess: () => {
       if (gathering) onJoinedChange(gathering, false)
       showSuccessToast("참가가 취소되었어요.")
+      onOpenChange(false)
     },
     onError: handleError.bind(showErrorToast),
     onSettled: () => {
@@ -73,6 +77,7 @@ export function GatheringDetailDialog({
     : ""
 
   const busy = joinMutation.isPending || cancelMutation.isPending
+  const isHost = !!gathering && !!user && gathering.host_id === user.id
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -129,7 +134,12 @@ export function GatheringDetailDialog({
             </div>
 
             <DialogFooter>
-              {joined ? (
+              {isHost ? (
+                <EditGatheringDialog
+                  gathering={gathering}
+                  trigger={<Button>수정하기</Button>}
+                />
+              ) : joined ? (
                 <LoadingButton
                   variant="outline"
                   loading={cancelMutation.isPending}

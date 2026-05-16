@@ -10,7 +10,11 @@ import {
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
 
-import { type GatheringPublic, GatheringsService } from "@/client"
+import {
+  type GatheringPublic,
+  GatheringsService,
+  type ParticipatingGatheringPublic,
+} from "@/client"
 import {
   SPORT_LABELS,
   type SportType,
@@ -30,10 +34,7 @@ import {
 } from "@/components/ui/dialog"
 import { LoadingButton } from "@/components/ui/loading-button"
 import useAuth from "@/hooks/useAuth"
-import {
-  type JoinedGathering,
-  useJoinedGatherings,
-} from "@/lib/joinedGatherings"
+import { useJoinedGatherings } from "@/lib/joinedGatherings"
 import { cn } from "@/lib/utils"
 
 export const Route = createFileRoute("/_layout/history")({
@@ -49,7 +50,10 @@ export const Route = createFileRoute("/_layout/history")({
 
 type Role = "host" | "participant"
 type HostItem = { role: "host"; gathering: GatheringPublic }
-type ParticipantItem = { role: "participant"; gathering: JoinedGathering }
+type ParticipantItem = {
+  role: "participant"
+  gathering: ParticipatingGatheringPublic
+}
 type Item = HostItem | ParticipantItem
 
 function HistoryPage() {
@@ -61,9 +65,9 @@ function HistoryPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const {
     items: joinedMap,
-    add: addJoined,
-    remove: removeJoined,
     has: hasJoined,
+    markJoined,
+    markUnjoined,
   } = useJoinedGatherings()
 
   const gatheringsQuery = useQuery({
@@ -141,8 +145,8 @@ function HistoryPage() {
           if (!open) setSelectedId(null)
         }}
         onJoinedChange={(g, joined) => {
-          if (joined) addJoined(g)
-          else removeJoined(g.id)
+          if (joined) markJoined(g)
+          else markUnjoined(g.id)
         }}
       />
 

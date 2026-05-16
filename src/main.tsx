@@ -12,7 +12,6 @@ import { ApiError, OpenAPI } from "./client"
 import { ThemeProvider } from "./components/theme-provider"
 import { Toaster } from "./components/ui/sonner"
 import "./index.css"
-import { clearJoinedGatherings } from "./lib/joinedGatherings"
 import { routeTree } from "./routeTree.gen"
 
 declare module "@tanstack/react-query" {
@@ -46,7 +45,6 @@ function handleApiError(
   if (error instanceof ApiError && [401, 403].includes(error.status)) {
     localStorage.removeItem("access_token")
     localStorage.removeItem("chat-recommendations")
-    clearJoinedGatherings()
     window.location.href = "/login"
     return
   }

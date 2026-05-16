@@ -180,6 +180,34 @@ export type ParticipantPublic = {
     joined_at: (string | null);
 };
 
+export type ParticipatingGatheringPublic = {
+    id: string;
+    host_id: string;
+    title: string;
+    place_name: string;
+    city: string;
+    lat: number;
+    lng: number;
+    sport_type: string;
+    starts_at: string;
+    duration_min: number;
+    max_participants: number;
+    level: number;
+    vibe: Array<(string)>;
+    description: (string | null);
+    status: number;
+    created_at: (string | null);
+    updated_at: (string | null);
+    participant_id: string;
+    participant_status: string;
+    joined_at: (string | null);
+};
+
+export type ParticipatingGatheringsPublic = {
+    data: Array<ParticipatingGatheringPublic>;
+    count: number;
+};
+
 export type Token = {
     access_token: string;
     token_type?: string;
@@ -198,6 +226,7 @@ export type UserCreate = {
     age?: (number | null);
     sex?: (number | null);
     city?: (string | null);
+    avatar_index?: (number | null);
     password: string;
 };
 
@@ -215,6 +244,7 @@ export type UserPublic = {
     age?: (number | null);
     sex?: (number | null);
     city?: (string | null);
+    avatar_index?: (number | null);
     id: string;
     created_at?: (string | null);
     updated_at?: (string | null);
@@ -227,6 +257,7 @@ export type UserRegister = {
     age?: (number | null);
     sex?: (number | null);
     city?: (string | null);
+    avatar_index?: (number | null);
 };
 
 export type UsersPublic = {
@@ -242,6 +273,7 @@ export type UserUpdate = {
     age?: (number | null);
     sex?: (number | null);
     city?: (string | null);
+    avatar_index?: (number | null);
     password?: (string | null);
 };
 
@@ -251,6 +283,7 @@ export type UserUpdateMe = {
     age?: (number | null);
     sex?: (number | null);
     city?: (string | null);
+    avatar_index?: (number | null);
 };
 
 export type ValidationError = {
@@ -332,6 +365,13 @@ export type GatheringsCreateGatheringData = {
 };
 
 export type GatheringsCreateGatheringResponse = (GatheringPublic);
+
+export type GatheringsReadMyParticipatingGatheringsData = {
+    limit?: number;
+    skip?: number;
+};
+
+export type GatheringsReadMyParticipatingGatheringsResponse = (ParticipatingGatheringsPublic);
 
 export type GatheringsReadGatheringData = {
     id: string;

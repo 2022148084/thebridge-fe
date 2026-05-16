@@ -1,87 +1,75 @@
-import { useCallback, useState } from "react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useCallback, useMemo } from "react"
 
-import type { GatheringPublic, GatheringRecommendPublic } from "@/client"
+import {
+  type GatheringPublic,
+  type GatheringRecommendPublic,
+  GatheringsService,
+  type ParticipatingGatheringPublic,
+  type ParticipatingGatheringsPublic,
+} from "@/client"
 
-export type JoinedGathering = {
-  id: string
-  title: string
-  sport_type: string
-  starts_at: string
-  duration_min: number
-  place_name: string
-  city: string
-  level: number
-  max_participants: number
-  joined_at: string
-}
-
-const STORAGE_KEY = "joined-gatherings"
-
-function load(): Record<string, JoinedGathering> {
-  if (typeof window === "undefined") return {}
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : {}
-  } catch {
-    return {}
-  }
-}
-
-function save(items: Record<string, JoinedGathering>) {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
-  } catch {
-    // storage may be unavailable (private mode, quota); silently skip
-  }
-}
-
-export function clearJoinedGatherings() {
-  try {
-    window.localStorage.removeItem(STORAGE_KEY)
-  } catch {
-    // ignore
-  }
-}
-
-export function toJoinedGathering(
-  g: GatheringPublic | GatheringRecommendPublic,
-): JoinedGathering {
-  return {
-    id: g.id,
-    title: g.title,
-    sport_type: g.sport_type,
-    starts_at: g.starts_at,
-    duration_min: g.duration_min,
-    place_name: g.place_name,
-    city: g.city,
-    level: g.level,
-    max_participants: g.max_participants,
-    joined_at: new Date().toISOString(),
-  }
-}
+export const PARTICIPATIONS_KEY = ["my-participations"] as const
 
 export function useJoinedGatherings() {
-  const [items, setItems] = useState<Record<string, JoinedGathering>>(load)
+  const queryClient = useQueryClient()
 
-  const add = useCallback((g: GatheringPublic | GatheringRecommendPublic) => {
-    setItems((prev) => {
-      const next = { ...prev, [g.id]: toJoinedGathering(g) }
-      save(next)
-      return next
-    })
-  }, [])
+  const query = useQuery({
+    queryKey: PARTICIPATIONS_KEY,
+    queryFn: () => GatheringsService.readMyParticipatingGatherings(),
+  })
 
-  const remove = useCallback((id: string) => {
-    setItems((prev) => {
-      if (!(id in prev)) return prev
-      const next = { ...prev }
-      delete next[id]
-      save(next)
-      return next
-    })
-  }, [])
+  const itemsMap = useMemo(() => {
+    const map: Record<string, ParticipatingGatheringPublic> = {}
+    for (const g of query.data?.data ?? []) {
+      map[g.id] = g
+    }
+    return map
+  }, [query.data])
 
-  const has = useCallback((id: string) => id in items, [items])
+  const has = useCallback((id: string) => id in itemsMap, [itemsMap])
 
-  return { items, add, remove, has }
+  const markJoined = useCallback(
+    (g: GatheringPublic | GatheringRecommendPublic) => {
+      queryClient.setQueryData<ParticipatingGatheringsPublic>(
+        PARTICIPATIONS_KEY,
+        (old) => {
+          const existing = old?.data ?? []
+          if (existing.some((x) => x.id === g.id)) return old
+          const stub = {
+            ...g,
+            participant_id: "optimistic",
+            participant_status: "pending",
+            joined_at: new Date().toISOString(),
+          } as unknown as ParticipatingGatheringPublic
+          return { data: [...existing, stub], count: existing.length + 1 }
+        },
+      )
+      queryClient.invalidateQueries({ queryKey: PARTICIPATIONS_KEY })
+    },
+    [queryClient],
+  )
+
+  const markUnjoined = useCallback(
+    (id: string) => {
+      queryClient.setQueryData<ParticipatingGatheringsPublic>(
+        PARTICIPATIONS_KEY,
+        (old) => {
+          if (!old) return old
+          const data = old.data.filter((x) => x.id !== id)
+          return { data, count: data.length }
+        },
+      )
+      queryClient.invalidateQueries({ queryKey: PARTICIPATIONS_KEY })
+    },
+    [queryClient],
+  )
+
+  return {
+    items: itemsMap,
+    has,
+    markJoined,
+    markUnjoined,
+    isLoading: query.isLoading,
+  }
 }
