@@ -16,6 +16,7 @@ import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
 import { Route as LayoutMapRouteImport } from './routes/_layout/map'
 import { Route as LayoutItemsRouteImport } from './routes/_layout/items'
+import { Route as LayoutFriendsRouteImport } from './routes/_layout/friends'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
 
 const SignupRoute = SignupRouteImport.update({
@@ -52,6 +53,11 @@ const LayoutItemsRoute = LayoutItemsRouteImport.update({
   path: '/items',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutFriendsRoute = LayoutFriendsRouteImport.update({
+  id: '/friends',
+  path: '/friends',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutAdminRoute = LayoutAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/admin': typeof LayoutAdminRoute
+  '/friends': typeof LayoutFriendsRoute
   '/items': typeof LayoutItemsRoute
   '/map': typeof LayoutMapRoute
   '/settings': typeof LayoutSettingsRoute
@@ -71,6 +78,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/admin': typeof LayoutAdminRoute
+  '/friends': typeof LayoutFriendsRoute
   '/items': typeof LayoutItemsRoute
   '/map': typeof LayoutMapRoute
   '/settings': typeof LayoutSettingsRoute
@@ -82,6 +90,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/_layout/admin': typeof LayoutAdminRoute
+  '/_layout/friends': typeof LayoutFriendsRoute
   '/_layout/items': typeof LayoutItemsRoute
   '/_layout/map': typeof LayoutMapRoute
   '/_layout/settings': typeof LayoutSettingsRoute
@@ -94,17 +103,27 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/admin'
+    | '/friends'
     | '/items'
     | '/map'
     | '/settings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/signup' | '/admin' | '/items' | '/map' | '/settings' | '/'
+  to:
+    | '/login'
+    | '/signup'
+    | '/admin'
+    | '/friends'
+    | '/items'
+    | '/map'
+    | '/settings'
+    | '/'
   id:
     | '__root__'
     | '/_layout'
     | '/login'
     | '/signup'
     | '/_layout/admin'
+    | '/_layout/friends'
     | '/_layout/items'
     | '/_layout/map'
     | '/_layout/settings'
@@ -168,6 +187,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutItemsRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/friends': {
+      id: '/_layout/friends'
+      path: '/friends'
+      fullPath: '/friends'
+      preLoaderRoute: typeof LayoutFriendsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/admin': {
       id: '/_layout/admin'
       path: '/admin'
@@ -180,6 +206,7 @@ declare module '@tanstack/react-router' {
 
 interface LayoutRouteChildren {
   LayoutAdminRoute: typeof LayoutAdminRoute
+  LayoutFriendsRoute: typeof LayoutFriendsRoute
   LayoutItemsRoute: typeof LayoutItemsRoute
   LayoutMapRoute: typeof LayoutMapRoute
   LayoutSettingsRoute: typeof LayoutSettingsRoute
@@ -188,6 +215,7 @@ interface LayoutRouteChildren {
 
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAdminRoute: LayoutAdminRoute,
+  LayoutFriendsRoute: LayoutFriendsRoute,
   LayoutItemsRoute: LayoutItemsRoute,
   LayoutMapRoute: LayoutMapRoute,
   LayoutSettingsRoute: LayoutSettingsRoute,
