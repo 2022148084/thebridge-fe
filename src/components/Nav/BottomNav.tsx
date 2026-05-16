@@ -2,7 +2,6 @@ import { Link as RouterLink, useRouterState } from "@tanstack/react-router"
 import {
   Briefcase,
   ChevronsUpDown,
-  Home,
   LogOut,
   type LucideIcon,
   MapPin,
@@ -32,7 +31,6 @@ type NavItem = {
 }
 
 const baseItems: NavItem[] = [
-  { icon: Home, title: "Dashboard", path: "/" },
   { icon: MapPin, title: "Map", path: "/map" },
   { icon: UserRound, title: "Friends", path: "/friends" },
   { icon: Briefcase, title: "Items", path: "/items" },
@@ -49,7 +47,7 @@ export function BottomNav() {
 
   return (
     <nav className="sticky bottom-0 z-10 flex h-16 items-center justify-between border-t bg-background px-4">
-      <ul className="flex flex-1 items-center justify-around gap-1">
+      <ul className="flex flex-1 items-center justify-start gap-1">
         {items.map((item) => {
           const isActive = currentPath === item.path
           const Icon = item.icon

@@ -28,7 +28,8 @@ function Layout() {
 
   return (
     <div className="flex min-h-svh flex-col">
-      <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-end border-b bg-background px-4">
+      <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between border-b bg-background px-4">
+        <span className="text-lg font-semibold tracking-wide">WBOND</span>
         <Appearance />
       </header>
       {fullscreen ? (
