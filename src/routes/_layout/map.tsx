@@ -5,10 +5,11 @@ import {
   Marker,
   useMap,
 } from "@vis.gl/react-google-maps"
-import { RefreshCw, Send, Sparkles, X } from "lucide-react"
+import { Plus, RefreshCw, Send, Sparkles, X } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
+import CreateEventDialog from "@/components/Events/CreateEventDialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { type ChatMessage, loadMessages, saveMessages } from "@/lib/chatStorage"
@@ -133,6 +134,18 @@ function MapPage() {
           >
             <RefreshCw className={loading ? "animate-spin" : ""} />
           </Button>
+          <CreateEventDialog
+            trigger={
+              <Button
+                size="icon"
+                variant="secondary"
+                className="absolute right-4 bottom-22 z-10 h-14 w-14 rounded-full shadow-lg"
+                aria-label="Event generator"
+              >
+                <Plus className="size-6" />
+              </Button>
+            }
+          />
           {!chatOpen && (
             <Button
               size="icon"
