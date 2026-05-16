@@ -24,6 +24,11 @@ export type ChatMessagePublic = {
     created_at: (string | null);
 };
 
+export type ChatResponse = {
+    message: ChatMessagePublic;
+    recommendations?: (Array<GatheringRecommendPublic> | null);
+};
+
 export type FriendRequestPublic = {
     id: string;
     requester: UserPublic;
@@ -52,6 +57,7 @@ export type FriendsPublic = {
 };
 
 export type GatheringCreate = {
+    title: string;
     place_name: string;
     city: string;
     lat: number;
@@ -71,6 +77,7 @@ export type sport_type = 'running' | 'cycling' | 'yoga' | 'stretching' | 'dancin
 export type GatheringPublic = {
     id: string;
     host_id: string;
+    title: string;
     place_name: string;
     city: string;
     lat: number;
@@ -87,12 +94,39 @@ export type GatheringPublic = {
     updated_at: (string | null);
 };
 
+export type GatheringRecommendPublic = {
+    id: string;
+    host_id: string;
+    title: string;
+    place_name: string;
+    city: string;
+    lat: number;
+    lng: number;
+    sport_type: string;
+    starts_at: string;
+    duration_min: number;
+    max_participants: number;
+    level: number;
+    vibe: Array<(string)>;
+    description: (string | null);
+    status: number;
+    created_at: (string | null);
+    updated_at: (string | null);
+    match_percentage: number;
+};
+
 export type GatheringsPublic = {
     data: Array<GatheringPublic>;
     count: number;
 };
 
+export type GatheringsRecommendPublic = {
+    data: Array<GatheringRecommendPublic>;
+    count: number;
+};
+
 export type GatheringUpdate = {
+    title?: (string | null);
     place_name?: (string | null);
     city?: (string | null);
     lat?: (number | null);
@@ -233,7 +267,7 @@ export type ChatSendMessageData = {
     requestBody: ChatMessageInput;
 };
 
-export type ChatSendMessageResponse = (ChatMessagePublic);
+export type ChatSendMessageResponse = (ChatResponse);
 
 export type ChatGetChatHistoryResponse = (ChatHistoryPublic);
 
@@ -276,6 +310,12 @@ export type FriendsRejectFriendRequestData = {
 };
 
 export type FriendsRejectFriendRequestResponse = (Message);
+
+export type GatheringsGetRecommendedGatheringsData = {
+    limit?: number;
+};
+
+export type GatheringsGetRecommendedGatheringsResponse = (GatheringsRecommendPublic);
 
 export type GatheringsReadGatheringsData = {
     city?: (string | null);

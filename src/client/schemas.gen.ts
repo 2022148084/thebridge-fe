@@ -117,6 +117,31 @@ export const ChatMessagePublicSchema = {
     title: 'ChatMessagePublic'
 } as const;
 
+export const ChatResponseSchema = {
+    properties: {
+        message: {
+            '$ref': '#/components/schemas/ChatMessagePublic'
+        },
+        recommendations: {
+            anyOf: [
+                {
+                    items: {
+                        '$ref': '#/components/schemas/GatheringRecommendPublic'
+                    },
+                    type: 'array'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Recommendations'
+        }
+    },
+    type: 'object',
+    required: ['message'],
+    title: 'ChatResponse'
+} as const;
+
 export const FriendRequestPublicSchema = {
     properties: {
         id: {
@@ -237,6 +262,12 @@ export const FriendshipPublicSchema = {
 
 export const GatheringCreateSchema = {
     properties: {
+        title: {
+            type: 'string',
+            maxLength: 255,
+            minLength: 1,
+            title: 'Title'
+        },
         place_name: {
             type: 'string',
             maxLength: 255,
@@ -309,7 +340,7 @@ export const GatheringCreateSchema = {
         }
     },
     type: 'object',
-    required: ['place_name', 'city', 'lat', 'lng', 'sport_type', 'starts_at', 'duration_min', 'max_participants', 'level', 'vibe'],
+    required: ['title', 'place_name', 'city', 'lat', 'lng', 'sport_type', 'starts_at', 'duration_min', 'max_participants', 'level', 'vibe'],
     title: 'GatheringCreate'
 } as const;
 
@@ -324,6 +355,10 @@ export const GatheringPublicSchema = {
             type: 'string',
             format: 'uuid',
             title: 'Host Id'
+        },
+        title: {
+            type: 'string',
+            title: 'Title'
         },
         place_name: {
             type: 'string',
@@ -410,12 +445,134 @@ export const GatheringPublicSchema = {
         }
     },
     type: 'object',
-    required: ['id', 'host_id', 'place_name', 'city', 'lat', 'lng', 'sport_type', 'starts_at', 'duration_min', 'max_participants', 'level', 'vibe', 'description', 'status', 'created_at', 'updated_at'],
+    required: ['id', 'host_id', 'title', 'place_name', 'city', 'lat', 'lng', 'sport_type', 'starts_at', 'duration_min', 'max_participants', 'level', 'vibe', 'description', 'status', 'created_at', 'updated_at'],
     title: 'GatheringPublic'
+} as const;
+
+export const GatheringRecommendPublicSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        host_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Host Id'
+        },
+        title: {
+            type: 'string',
+            title: 'Title'
+        },
+        place_name: {
+            type: 'string',
+            title: 'Place Name'
+        },
+        city: {
+            type: 'string',
+            title: 'City'
+        },
+        lat: {
+            type: 'number',
+            title: 'Lat'
+        },
+        lng: {
+            type: 'number',
+            title: 'Lng'
+        },
+        sport_type: {
+            type: 'string',
+            title: 'Sport Type'
+        },
+        starts_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Starts At'
+        },
+        duration_min: {
+            type: 'integer',
+            title: 'Duration Min'
+        },
+        max_participants: {
+            type: 'integer',
+            title: 'Max Participants'
+        },
+        level: {
+            type: 'integer',
+            title: 'Level'
+        },
+        vibe: {
+            items: {
+                type: 'string'
+            },
+            type: 'array',
+            title: 'Vibe'
+        },
+        description: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Description'
+        },
+        status: {
+            type: 'integer',
+            title: 'Status'
+        },
+        created_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Created At'
+        },
+        updated_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Updated At'
+        },
+        match_percentage: {
+            type: 'number',
+            title: 'Match Percentage'
+        }
+    },
+    type: 'object',
+    required: ['id', 'host_id', 'title', 'place_name', 'city', 'lat', 'lng', 'sport_type', 'starts_at', 'duration_min', 'max_participants', 'level', 'vibe', 'description', 'status', 'created_at', 'updated_at', 'match_percentage'],
+    title: 'GatheringRecommendPublic'
 } as const;
 
 export const GatheringUpdateSchema = {
     properties: {
+        title: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255,
+                    minLength: 1
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Title'
+        },
         place_name: {
             anyOf: [
                 {
@@ -584,6 +741,25 @@ export const GatheringsPublicSchema = {
     type: 'object',
     required: ['data', 'count'],
     title: 'GatheringsPublic'
+} as const;
+
+export const GatheringsRecommendPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/GatheringRecommendPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['data', 'count'],
+    title: 'GatheringsRecommendPublic'
 } as const;
 
 export const HTTPValidationErrorSchema = {

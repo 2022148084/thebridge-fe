@@ -8,7 +8,7 @@ import {
   type UserRegister,
   UsersService,
 } from "@/client"
-import { clearMessages } from "@/lib/chatStorage"
+import { clearJoinedGatherings } from "@/lib/joinedGatherings"
 import { handleError } from "@/utils"
 import useCustomToast from "./useCustomToast"
 
@@ -44,6 +44,7 @@ const useAuth = () => {
       formData: data,
     })
     localStorage.setItem("access_token", response.access_token)
+    localStorage.setItem("chat-cutoff", new Date().toISOString())
   }
 
   const loginMutation = useMutation({
@@ -56,7 +57,9 @@ const useAuth = () => {
 
   const logout = () => {
     localStorage.removeItem("access_token")
-    clearMessages()
+    localStorage.removeItem("chat-recommendations")
+    clearJoinedGatherings()
+    queryClient.clear()
     navigate({ to: "/login" })
   }
 

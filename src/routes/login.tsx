@@ -72,7 +72,10 @@ function Login() {
                   Create an account
                 </DialogTitle>
               </DialogHeader>
-              <SignupForm onSwitchToLogin={() => setDialog("login")} />
+              <SignupForm
+                onSwitchToLogin={() => setDialog("login")}
+                onSuccess={() => setDialog("login")}
+              />
             </>
           )}
         </DialogContent>

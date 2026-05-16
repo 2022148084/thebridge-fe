@@ -1,9 +1,16 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { Check, Search, UserPlus, UserRound, X } from "lucide-react"
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  type FriendRequestPublic,
+  FriendsService,
+  type UserPublic,
+  UsersService,
+} from "@/client"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -29,116 +36,9 @@ export const Route = createFileRoute("/_layout/friends")({
   }),
 })
 
-type FriendStatus = "online" | "offline"
-
-type Person = {
-  id: string
-  name: string
-  email: string
-  avatar?: string
-  bio?: string
-  status: FriendStatus
-  mutualFriends?: number
+function displayName(u: UserPublic): string {
+  return u.full_name?.trim() || u.email
 }
-
-const INITIAL_FRIENDS: Person[] = [
-  {
-    id: "f1",
-    name: "Jiwoo Park",
-    email: "jiwoo@example.com",
-    avatar: "https://i.pravatar.cc/150?img=12",
-    bio: "프론트엔드 개발자. 커피와 React를 좋아합니다.",
-    status: "online",
-    mutualFriends: 4,
-  },
-  {
-    id: "f2",
-    name: "Minseo Lee",
-    email: "minseo@example.com",
-    avatar: "https://i.pravatar.cc/150?img=32",
-    bio: "디자이너 / UI·UX. 산책하는 거 좋아해요.",
-    status: "offline",
-    mutualFriends: 2,
-  },
-  {
-    id: "f3",
-    name: "Hyunwoo Kim",
-    email: "hyunwoo@example.com",
-    avatar: "https://i.pravatar.cc/150?img=15",
-    bio: "백엔드 개발자, 분산시스템에 관심 많음.",
-    status: "online",
-    mutualFriends: 7,
-  },
-  {
-    id: "f4",
-    name: "Yuna Choi",
-    email: "yuna@example.com",
-    avatar: "https://i.pravatar.cc/150?img=47",
-    bio: "PM. 새로운 사람 만나는 거 좋아해요.",
-    status: "offline",
-    mutualFriends: 1,
-  },
-]
-
-const INITIAL_REQUESTS: Person[] = [
-  {
-    id: "r1",
-    name: "Doyoon Han",
-    email: "doyoon@example.com",
-    avatar: "https://i.pravatar.cc/150?img=22",
-    bio: "ML 엔지니어. 같이 해커톤 나가요!",
-    status: "online",
-    mutualFriends: 3,
-  },
-  {
-    id: "r2",
-    name: "Sora Jung",
-    email: "sora@example.com",
-    avatar: "https://i.pravatar.cc/150?img=49",
-    bio: "iOS 개발자",
-    status: "offline",
-    mutualFriends: 0,
-  },
-]
-
-const DISCOVERABLE: Person[] = [
-  {
-    id: "d1",
-    name: "Jaeho Kang",
-    email: "jaeho@example.com",
-    avatar: "https://i.pravatar.cc/150?img=8",
-    bio: "안드로이드 개발자. 코틀린 사랑꾼.",
-    status: "online",
-    mutualFriends: 5,
-  },
-  {
-    id: "d2",
-    name: "Eunji Seo",
-    email: "eunji@example.com",
-    avatar: "https://i.pravatar.cc/150?img=44",
-    bio: "데이터 엔지니어. 글쓰기 좋아함.",
-    status: "offline",
-    mutualFriends: 2,
-  },
-  {
-    id: "d3",
-    name: "Taehyun Oh",
-    email: "taehyun@example.com",
-    avatar: "https://i.pravatar.cc/150?img=18",
-    bio: "DevOps. 새벽 러닝 중독.",
-    status: "online",
-    mutualFriends: 1,
-  },
-  {
-    id: "d4",
-    name: "Hana Yoon",
-    email: "hana@example.com",
-    avatar: "https://i.pravatar.cc/150?img=35",
-    bio: "풀스택. 사이드 프로젝트 항상 환영.",
-    status: "online",
-    mutualFriends: 6,
-  },
-]
 
 function initials(name: string) {
   return name
@@ -150,54 +50,88 @@ function initials(name: string) {
 }
 
 function FriendsPage() {
-  const [friends, setFriends] = useState<Person[]>(INITIAL_FRIENDS)
-  const [requests, setRequests] = useState<Person[]>(INITIAL_REQUESTS)
-  const [sentIds, setSentIds] = useState<Set<string>>(new Set())
+  const queryClient = useQueryClient()
   const [query, setQuery] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
-  const [selected, setSelected] = useState<Person | null>(null)
+  const [sentIds, setSentIds] = useState<Set<string>>(new Set())
+  const [selected, setSelected] = useState<UserPublic | null>(null)
+
+  const friendsQuery = useQuery({
+    queryKey: ["friends"],
+    queryFn: () => FriendsService.readFriends(),
+  })
+  const friends = friendsQuery.data?.data ?? []
+
+  const requestsQuery = useQuery({
+    queryKey: ["friend-requests"],
+    queryFn: () => FriendsService.readFriendRequests(),
+  })
+  const requests = requestsQuery.data?.data ?? []
+
+  const trimmedSearch = searchQuery.trim()
+  const searchEnabled = trimmedSearch.length >= 1
+  const searchUsersQuery = useQuery({
+    queryKey: ["user-search", trimmedSearch],
+    queryFn: () => UsersService.searchUsers({ q: trimmedSearch }),
+    enabled: searchEnabled,
+  })
+
+  const friendIds = useMemo(() => new Set(friends.map((f) => f.id)), [friends])
+  const searchResults = (searchUsersQuery.data?.data ?? []).filter(
+    (u) => !friendIds.has(u.id),
+  )
 
   const filteredFriends = useMemo(() => {
     const q = query.trim().toLowerCase()
     if (!q) return friends
     return friends.filter(
       (f) =>
-        f.name.toLowerCase().includes(q) || f.email.toLowerCase().includes(q),
+        displayName(f).toLowerCase().includes(q) ||
+        f.email.toLowerCase().includes(q),
     )
   }, [friends, query])
 
-  const searchResults = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase()
-    const friendIds = new Set(friends.map((f) => f.id))
-    const pool = DISCOVERABLE.filter((p) => !friendIds.has(p.id))
-    if (!q) return pool
-    return pool.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) || p.email.toLowerCase().includes(q),
-    )
-  }, [friends, searchQuery])
+  const acceptMutation = useMutation({
+    mutationFn: (req: FriendRequestPublic) =>
+      FriendsService.acceptFriendRequest({ requestId: req.id }),
+    onSuccess: (_data, req) => {
+      toast.success(`${displayName(req.requester)}님과 친구가 되었어요`)
+      queryClient.invalidateQueries({ queryKey: ["friend-requests"] })
+      queryClient.invalidateQueries({ queryKey: ["friends"] })
+    },
+    meta: { errorMessage: "요청 수락에 실패했어요" },
+  })
 
-  const acceptRequest = (person: Person) => {
-    setRequests((prev) => prev.filter((p) => p.id !== person.id))
-    setFriends((prev) => [{ ...person }, ...prev])
-    toast.success(`${person.name}님과 친구가 되었어요`)
-  }
+  const rejectMutation = useMutation({
+    mutationFn: (req: FriendRequestPublic) =>
+      FriendsService.rejectFriendRequest({ requestId: req.id }),
+    onSuccess: (_data, req) => {
+      toast(`${displayName(req.requester)}님의 요청을 거절했어요`)
+      queryClient.invalidateQueries({ queryKey: ["friend-requests"] })
+    },
+    meta: { errorMessage: "요청 거절에 실패했어요" },
+  })
 
-  const declineRequest = (person: Person) => {
-    setRequests((prev) => prev.filter((p) => p.id !== person.id))
-    toast(`${person.name}님의 요청을 거절했어요`)
-  }
+  const addMutation = useMutation({
+    mutationFn: (user: UserPublic) =>
+      FriendsService.addFriend({ friendId: user.id }),
+    onSuccess: (_data, user) => {
+      toast.success(`${displayName(user)}님에게 친구 요청을 보냈어요`)
+      setSentIds((prev) => new Set(prev).add(user.id))
+    },
+    meta: { errorMessage: "친구 요청을 보낼 수 없어요" },
+  })
 
-  const sendRequest = (person: Person) => {
-    setSentIds((prev) => new Set(prev).add(person.id))
-    toast.success(`${person.name}님에게 친구 요청을 보냈어요`)
-  }
-
-  const removeFriend = (person: Person) => {
-    setFriends((prev) => prev.filter((p) => p.id !== person.id))
-    toast(`${person.name}님을 친구 목록에서 삭제했어요`)
-    setSelected(null)
-  }
+  const deleteMutation = useMutation({
+    mutationFn: (user: UserPublic) =>
+      FriendsService.deleteFriend({ friendId: user.id }),
+    onSuccess: (_data, user) => {
+      toast(`${displayName(user)}님을 친구 목록에서 삭제했어요`)
+      queryClient.invalidateQueries({ queryKey: ["friends"] })
+      setSelected(null)
+    },
+    meta: { errorMessage: "친구 삭제에 실패했어요" },
+  })
 
   return (
     <div className="flex flex-col gap-6">
@@ -240,7 +174,9 @@ function FriendsPage() {
             />
           </div>
 
-          {filteredFriends.length === 0 ? (
+          {friendsQuery.isLoading ? (
+            <p className="text-sm text-muted-foreground">불러오는 중…</p>
+          ) : filteredFriends.length === 0 ? (
             <EmptyState
               icon={<UserRound className="size-8 text-muted-foreground" />}
               title={query ? "검색 결과가 없어요" : "아직 친구가 없어요"}
@@ -264,56 +200,68 @@ function FriendsPage() {
         </TabsContent>
 
         <TabsContent value="requests" className="flex flex-col gap-3">
-          {requests.length === 0 ? (
+          {requestsQuery.isLoading ? (
+            <p className="text-sm text-muted-foreground">불러오는 중…</p>
+          ) : requests.length === 0 ? (
             <EmptyState
               icon={<UserPlus className="size-8 text-muted-foreground" />}
               title="받은 요청이 없어요"
               description="새로운 요청이 오면 여기에 표시됩니다"
             />
           ) : (
-            requests.map((person) => (
-              <Card key={person.id}>
-                <CardContent className="flex items-center gap-4 p-4">
-                  <button
-                    type="button"
-                    onClick={() => setSelected(person)}
-                    className="flex flex-1 items-center gap-4 text-left"
-                  >
-                    <Avatar className="size-12">
-                      <AvatarImage src={person.avatar} alt={person.name} />
-                      <AvatarFallback>{initials(person.name)}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex min-w-0 flex-col">
-                      <span className="truncate font-medium">
-                        {person.name}
-                      </span>
-                      <span className="truncate text-sm text-muted-foreground">
-                        {person.email}
-                      </span>
-                      {person.mutualFriends ? (
-                        <span className="text-xs text-muted-foreground">
-                          함께 아는 친구 {person.mutualFriends}명
-                        </span>
-                      ) : null}
-                    </div>
-                  </button>
-                  <div className="flex items-center gap-2">
-                    <Button size="sm" onClick={() => acceptRequest(person)}>
-                      <Check />
-                      수락
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => declineRequest(person)}
+            requests.map((req) => {
+              const person = req.requester
+              const accepting =
+                acceptMutation.isPending &&
+                acceptMutation.variables?.id === req.id
+              const rejecting =
+                rejectMutation.isPending &&
+                rejectMutation.variables?.id === req.id
+              return (
+                <Card key={req.id}>
+                  <CardContent className="flex items-center gap-4 p-4">
+                    <button
+                      type="button"
+                      onClick={() => setSelected(person)}
+                      className="flex flex-1 items-center gap-4 text-left"
                     >
-                      <X />
-                      거절
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+                      <Avatar className="size-12">
+                        <AvatarFallback>
+                          {initials(displayName(person))}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex min-w-0 flex-col">
+                        <span className="truncate font-medium">
+                          {displayName(person)}
+                        </span>
+                        <span className="truncate text-sm text-muted-foreground">
+                          {person.email}
+                        </span>
+                      </div>
+                    </button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => acceptMutation.mutate(req)}
+                        disabled={accepting || rejecting}
+                      >
+                        <Check />
+                        수락
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => rejectMutation.mutate(req)}
+                        disabled={accepting || rejecting}
+                      >
+                        <X />
+                        거절
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })
           )}
         </TabsContent>
 
@@ -328,7 +276,15 @@ function FriendsPage() {
             />
           </div>
 
-          {searchResults.length === 0 ? (
+          {!searchEnabled ? (
+            <EmptyState
+              icon={<Search className="size-8 text-muted-foreground" />}
+              title="검색어를 입력해 주세요"
+              description="이름이나 이메일로 사람을 찾아보세요"
+            />
+          ) : searchUsersQuery.isLoading ? (
+            <p className="text-sm text-muted-foreground">검색 중…</p>
+          ) : searchResults.length === 0 ? (
             <EmptyState
               icon={<Search className="size-8 text-muted-foreground" />}
               title="검색 결과가 없어요"
@@ -338,6 +294,9 @@ function FriendsPage() {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {searchResults.map((person) => {
                 const sent = sentIds.has(person.id)
+                const sending =
+                  addMutation.isPending &&
+                  addMutation.variables?.id === person.id
                 return (
                   <Card key={person.id}>
                     <CardContent className="flex flex-col gap-3 p-4">
@@ -347,30 +306,24 @@ function FriendsPage() {
                         className="flex items-center gap-3 text-left"
                       >
                         <Avatar className="size-12">
-                          <AvatarImage src={person.avatar} alt={person.name} />
                           <AvatarFallback>
-                            {initials(person.name)}
+                            {initials(displayName(person))}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex min-w-0 flex-col">
                           <span className="truncate font-medium">
-                            {person.name}
+                            {displayName(person)}
                           </span>
                           <span className="truncate text-sm text-muted-foreground">
                             {person.email}
                           </span>
-                          {person.mutualFriends ? (
-                            <span className="text-xs text-muted-foreground">
-                              함께 아는 친구 {person.mutualFriends}명
-                            </span>
-                          ) : null}
                         </div>
                       </button>
                       <Button
                         size="sm"
                         variant={sent ? "outline" : "default"}
-                        disabled={sent}
-                        onClick={() => sendRequest(person)}
+                        disabled={sent || sending}
+                        onClick={() => addMutation.mutate(person)}
                       >
                         {sent ? (
                           <>
@@ -395,9 +348,10 @@ function FriendsPage() {
 
       <ProfileDialog
         person={selected}
-        isFriend={selected ? friends.some((f) => f.id === selected.id) : false}
+        isFriend={selected ? friendIds.has(selected.id) : false}
         onOpenChange={(open) => !open && setSelected(null)}
-        onRemove={removeFriend}
+        onRemove={(p) => deleteMutation.mutate(p)}
+        removing={deleteMutation.isPending}
       />
     </div>
   )
@@ -407,7 +361,7 @@ function FriendCard({
   person,
   onClick,
 }: {
-  person: Person
+  person: UserPublic
   onClick: () => void
 }) {
   return (
@@ -418,20 +372,11 @@ function FriendCard({
         className="w-full cursor-pointer text-left"
       >
         <CardContent className="flex items-center gap-3 p-4">
-          <div className="relative">
-            <Avatar className="size-12">
-              <AvatarImage src={person.avatar} alt={person.name} />
-              <AvatarFallback>{initials(person.name)}</AvatarFallback>
-            </Avatar>
-            <span
-              aria-hidden="true"
-              className={`absolute right-0 bottom-0 size-3 rounded-full border-2 border-background ${
-                person.status === "online" ? "bg-emerald-500" : "bg-zinc-400"
-              }`}
-            />
-          </div>
+          <Avatar className="size-12">
+            <AvatarFallback>{initials(displayName(person))}</AvatarFallback>
+          </Avatar>
           <div className="flex min-w-0 flex-col">
-            <span className="truncate font-medium">{person.name}</span>
+            <span className="truncate font-medium">{displayName(person)}</span>
             <span className="truncate text-sm text-muted-foreground">
               {person.email}
             </span>
@@ -447,11 +392,13 @@ function ProfileDialog({
   isFriend,
   onOpenChange,
   onRemove,
+  removing,
 }: {
-  person: Person | null
+  person: UserPublic | null
   isFriend: boolean
   onOpenChange: (open: boolean) => void
-  onRemove: (person: Person) => void
+  onRemove: (person: UserPublic) => void
+  removing: boolean
 }) {
   return (
     <Dialog open={person !== null} onOpenChange={onOpenChange}>
@@ -461,37 +408,28 @@ function ProfileDialog({
             <DialogHeader>
               <div className="flex items-center gap-4">
                 <Avatar className="size-16">
-                  <AvatarImage src={person.avatar} alt={person.name} />
                   <AvatarFallback className="text-lg">
-                    {initials(person.name)}
+                    {initials(displayName(person))}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col gap-1">
-                  <DialogTitle>{person.name}</DialogTitle>
+                  <DialogTitle>{displayName(person)}</DialogTitle>
                   <DialogDescription>{person.email}</DialogDescription>
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      variant={
-                        person.status === "online" ? "default" : "secondary"
-                      }
-                    >
-                      {person.status === "online" ? "온라인" : "오프라인"}
-                    </Badge>
-                    {person.mutualFriends ? (
-                      <span className="text-xs text-muted-foreground">
-                        함께 아는 친구 {person.mutualFriends}명
-                      </span>
-                    ) : null}
-                  </div>
+                  {person.city && (
+                    <span className="text-xs text-muted-foreground">
+                      📍 {person.city}
+                    </span>
+                  )}
                 </div>
               </div>
             </DialogHeader>
-            {person.bio && (
-              <p className="text-sm text-muted-foreground">{person.bio}</p>
-            )}
             {isFriend && (
               <DialogFooter>
-                <Button variant="destructive" onClick={() => onRemove(person)}>
+                <Button
+                  variant="destructive"
+                  onClick={() => onRemove(person)}
+                  disabled={removing}
+                >
                   친구 삭제
                 </Button>
               </DialogFooter>

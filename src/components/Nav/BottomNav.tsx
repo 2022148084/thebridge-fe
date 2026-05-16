@@ -1,28 +1,21 @@
 import { Link as RouterLink, useRouterState } from "@tanstack/react-router"
 import {
-  ChevronsUpDown,
-  LogOut,
+  History,
   type LucideIcon,
   MapPin,
+  Plus,
   Settings,
-  Star,
   UserRound,
   Users,
+  UsersRound,
 } from "lucide-react"
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import CreateEventDialog from "@/components/Events/CreateEventDialog"
+import ProfileDialog from "@/components/Profile/ProfileDialog"
+import SettingsDialog from "@/components/Settings/SettingsDialog"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import useAuth from "@/hooks/useAuth"
 import { cn } from "@/lib/utils"
-import { getInitials } from "@/utils"
 
 type NavItem = {
   icon: LucideIcon
@@ -32,12 +25,17 @@ type NavItem = {
 
 const baseItems: NavItem[] = [
   { icon: MapPin, title: "Map", path: "/map" },
-  { icon: UserRound, title: "Friends", path: "/friends" },
-  { icon: Star, title: "Review", path: "/review" },
+  { icon: UsersRound, title: "Friends", path: "/friends" },
+  { icon: UserRound, title: "Profile", path: "__profile__" },
+  { icon: History, title: "History", path: "/history" },
+  { icon: Settings, title: "Settings", path: "__settings__" },
 ]
 
+const navItemClass =
+  "flex flex-col items-center gap-1 rounded-md px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+
 export function BottomNav() {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const router = useRouterState()
   const currentPath = router.location.pathname
 
@@ -49,16 +47,51 @@ export function BottomNav() {
     <nav className="sticky bottom-0 z-10 flex h-16 items-center justify-between border-t bg-background px-4">
       <ul className="flex flex-1 items-center justify-start gap-1">
         {items.map((item) => {
-          const isActive = currentPath === item.path
           const Icon = item.icon
+          if (item.path === "__profile__") {
+            if (!user) return null
+            return (
+              <li key="profile">
+                <ProfileDialog
+                  trigger={
+                    <button
+                      type="button"
+                      className={navItemClass}
+                      data-testid="profile-button"
+                    >
+                      <Icon className="size-5" />
+                      <span>{item.title}</span>
+                    </button>
+                  }
+                />
+              </li>
+            )
+          }
+          if (item.path === "__settings__") {
+            if (!user) return null
+            return (
+              <li key="settings">
+                <SettingsDialog
+                  trigger={
+                    <button
+                      type="button"
+                      className={navItemClass}
+                      data-testid="settings-button"
+                    >
+                      <Icon className="size-5" />
+                      <span>{item.title}</span>
+                    </button>
+                  }
+                />
+              </li>
+            )
+          }
+          const isActive = currentPath === item.path
           return (
             <li key={item.path}>
               <RouterLink
                 to={item.path}
-                className={cn(
-                  "flex flex-col items-center gap-1 rounded-md px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground",
-                  isActive && "text-foreground",
-                )}
+                className={cn(navItemClass, isActive && "text-foreground")}
               >
                 <Icon className="size-5" />
                 <span>{item.title}</span>
@@ -69,50 +102,18 @@ export function BottomNav() {
       </ul>
       {user && (
         <div className="ml-4 shrink-0">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+          <CreateEventDialog
+            trigger={
               <Button
-                variant="ghost"
-                className="h-12 gap-2 px-2"
-                data-testid="user-menu"
+                size="icon"
+                className="h-12 w-12 rounded-full shadow-md"
+                aria-label="Create gathering"
+                data-testid="create-gathering"
               >
-                <Avatar className="size-8">
-                  <AvatarFallback className="bg-zinc-600 text-white">
-                    {getInitials(user.full_name || "User")}
-                  </AvatarFallback>
-                </Avatar>
-                <ChevronsUpDown className="size-4 text-muted-foreground" />
+                <Plus className="size-5" />
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              side="top"
-              sideOffset={8}
-              className="min-w-56 rounded-lg"
-            >
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium truncate">
-                    {user.full_name}
-                  </span>
-                  <span className="text-xs text-muted-foreground truncate">
-                    {user.email}
-                  </span>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <RouterLink to="/settings">
-                <DropdownMenuItem>
-                  <Settings />
-                  User Settings
-                </DropdownMenuItem>
-              </RouterLink>
-              <DropdownMenuItem onClick={logout}>
-                <LogOut />
-                Log Out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            }
+          />
         </div>
       )}
     </nav>

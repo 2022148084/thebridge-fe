@@ -1,9 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import type { ReactNode } from "react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
+import {
+  type GatheringCreate,
+  type GatheringPublic,
+  GatheringsService,
+} from "@/client"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -37,17 +43,30 @@ import useCustomToast from "@/hooks/useCustomToast"
 import { cn } from "@/lib/utils"
 import { PlaceAutocomplete } from "./PlaceAutocomplete"
 
-const CATEGORIES = [
-  "러닝",
-  "사이클",
-  "등산",
-  "헬스",
-  "요가/필라테스",
-  "구기종목",
-  "기타",
+export const SPORT_TYPES = [
+  "running",
+  "cycling",
+  "yoga",
+  "stretching",
+  "dancing",
+  "walking",
+  "hiking",
 ] as const
 
+export type SportType = (typeof SPORT_TYPES)[number]
+
+export const SPORT_LABELS: Record<SportType, string> = {
+  running: "러닝",
+  cycling: "사이클",
+  yoga: "요가",
+  stretching: "스트레칭",
+  dancing: "댄스",
+  walking: "걷기",
+  hiking: "등산",
+}
+
 const CAPACITY_OPTIONS = [5, 10, 15, 20] as const
+const DURATION_OPTIONS = [30, 60, 90, 120] as const
 
 const DIFFICULTY_COLORS = [
   "bg-green-500",
@@ -67,7 +86,7 @@ const DIFFICULTY_LABELS = [
 
 const formSchema = z.object({
   title: z.string().min(1, { message: "제목을 입력해 주세요." }),
-  category: z.enum(CATEGORIES, { message: "카테고리를 선택해 주세요." }),
+  sport_type: z.enum(SPORT_TYPES, { message: "카테고리를 선택해 주세요." }),
   date: z.string().min(1, { message: "날짜와 시간을 선택해 주세요." }),
   place_name: z.string().min(1, { message: "장소를 선택해 주세요." }),
   city: z.string().min(1),
@@ -79,6 +98,11 @@ const formSchema = z.object({
     .refine((v) => (CAPACITY_OPTIONS as readonly number[]).includes(v), {
       message: "정원을 선택해 주세요.",
     }),
+  duration_min: z.coerce
+    .number()
+    .refine((v) => (DURATION_OPTIONS as readonly number[]).includes(v), {
+      message: "소요 시간을 선택해 주세요.",
+    }),
   energyLevel: z.number().min(0).max(100),
   difficulty: z.coerce
     .number()
@@ -89,14 +113,40 @@ const formSchema = z.object({
 
 export type CreateEventFormData = z.infer<typeof formSchema>
 
+type Vibe = "quiet pace" | "reset mode" | "social energy" | "locked in"
+
+function energyToVibe(energy: number): Vibe {
+  if (energy <= 25) return "quiet pace"
+  if (energy <= 50) return "reset mode"
+  if (energy <= 75) return "social energy"
+  return "locked in"
+}
+
+function toGatheringCreate(data: CreateEventFormData): GatheringCreate {
+  return {
+    title: data.title,
+    place_name: data.place_name,
+    city: data.city,
+    lat: data.lat,
+    lng: data.lng,
+    sport_type: data.sport_type,
+    starts_at: new Date(data.date).toISOString(),
+    duration_min: data.duration_min,
+    max_participants: data.capacity,
+    level: data.difficulty,
+    vibe: [energyToVibe(data.energyLevel)],
+    description: data.description?.trim() || null,
+  }
+}
+
 interface CreateEventDialogProps {
   trigger: ReactNode
-  onCreated?: (data: CreateEventFormData) => void
+  onCreated?: (gathering: GatheringPublic) => void
 }
 
 const CreateEventDialog = ({ trigger, onCreated }: CreateEventDialogProps) => {
   const [isOpen, setIsOpen] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
+  const queryClient = useQueryClient()
   const { showSuccessToast } = useCustomToast()
 
   const form = useForm<CreateEventFormData>({
@@ -105,7 +155,7 @@ const CreateEventDialog = ({ trigger, onCreated }: CreateEventDialogProps) => {
     criteriaMode: "all",
     defaultValues: {
       title: "",
-      category: undefined,
+      sport_type: undefined,
       date: "",
       place_name: "",
       city: "",
@@ -113,22 +163,31 @@ const CreateEventDialog = ({ trigger, onCreated }: CreateEventDialogProps) => {
       lng: 0,
       description: "",
       capacity: 0,
+      duration_min: 60,
       energyLevel: 50,
       difficulty: 0,
     },
   })
 
-  const onSubmit = async (data: CreateEventFormData) => {
-    setSubmitting(true)
-    try {
-      onCreated?.(data)
-      showSuccessToast(`'${data.title}' 모임이 생성되었어요.`)
+  const createMutation = useMutation({
+    mutationFn: (body: GatheringCreate) =>
+      GatheringsService.createGathering({ requestBody: body }),
+    onSuccess: (gathering) => {
+      const title = form.getValues("title")
+      showSuccessToast(`'${title}' 모임이 생성되었어요.`)
+      queryClient.invalidateQueries({ queryKey: ["gatherings"] })
+      onCreated?.(gathering)
       form.reset()
       setIsOpen(false)
-    } finally {
-      setSubmitting(false)
-    }
+    },
+    meta: { errorMessage: "모임 생성에 실패했어요" },
+  })
+
+  const onSubmit = (data: CreateEventFormData) => {
+    createMutation.mutate(toGatheringCreate(data))
   }
+
+  const submitting = createMutation.isPending
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -175,7 +234,7 @@ const CreateEventDialog = ({ trigger, onCreated }: CreateEventDialogProps) => {
                 <div className="space-y-4">
                   <FormField
                     control={form.control}
-                    name="category"
+                    name="sport_type"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
@@ -191,9 +250,9 @@ const CreateEventDialog = ({ trigger, onCreated }: CreateEventDialogProps) => {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {CATEGORIES.map((c) => (
-                              <SelectItem key={c} value={c}>
-                                {c}
+                            {SPORT_TYPES.map((s) => (
+                              <SelectItem key={s} value={s}>
+                                {SPORT_LABELS[s]}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -325,6 +384,59 @@ const CreateEventDialog = ({ trigger, onCreated }: CreateEventDialogProps) => {
                                   onChange={() => field.onChange(n)}
                                   className="sr-only"
                                   aria-label={`${n}명`}
+                                />
+                                {n}
+                              </label>
+                            )
+                          })}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="duration_min"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-center justify-between">
+                          <FormLabel>
+                            Duration <span className="text-destructive">*</span>
+                          </FormLabel>
+                          <span className="text-muted-foreground text-xs">
+                            {(DURATION_OPTIONS as readonly number[]).includes(
+                              field.value,
+                            )
+                              ? `${field.value}분`
+                              : "선택 안 됨"}
+                          </span>
+                        </div>
+                        <div
+                          className="flex overflow-hidden rounded-md border"
+                          role="radiogroup"
+                          aria-label="소요 시간"
+                        >
+                          {DURATION_OPTIONS.map((n) => {
+                            const selected = field.value === n
+                            return (
+                              <label
+                                key={n}
+                                className={cn(
+                                  "flex h-7 flex-1 cursor-pointer items-center justify-center border-r text-xs font-medium transition-colors last:border-r-0",
+                                  selected
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-muted text-muted-foreground hover:bg-muted/70",
+                                )}
+                              >
+                                <input
+                                  type="radio"
+                                  name={field.name}
+                                  value={n}
+                                  checked={selected}
+                                  onChange={() => field.onChange(n)}
+                                  className="sr-only"
+                                  aria-label={`${n}분`}
                                 />
                                 {n}
                               </label>

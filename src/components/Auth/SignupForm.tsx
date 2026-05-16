@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
+import type { UserRegister } from "@/client"
 import {
   Form,
   FormControl,
@@ -13,12 +14,38 @@ import {
 import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
 import { PasswordInput } from "@/components/ui/password-input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import useAuth from "@/hooks/useAuth"
+import useCustomToast from "@/hooks/useCustomToast"
+
+const SEX_OPTIONS = [
+  { value: "0", label: "Prefer not to say" },
+  { value: "1", label: "Male" },
+  { value: "2", label: "Female" },
+] as const
 
 const formSchema = z
   .object({
     email: z.string().email(),
     full_name: z.string().min(1, { message: "Full Name is required" }),
+    age: z
+      .string()
+      .optional()
+      .refine(
+        (v) => !v || (/^\d+$/.test(v) && Number(v) >= 1 && Number(v) <= 120),
+        { message: "Age must be a number between 1 and 120" },
+      ),
+    sex: z.enum(["0", "1", "2"]).optional(),
+    city: z
+      .string()
+      .max(255, { message: "City must be 255 characters or fewer" })
+      .optional(),
     password: z
       .string()
       .min(1, { message: "Password is required" })
@@ -36,10 +63,12 @@ type FormData = z.infer<typeof formSchema>
 
 interface SignupFormProps {
   onSwitchToLogin?: () => void
+  onSuccess?: () => void
 }
 
-export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
+export function SignupForm({ onSwitchToLogin, onSuccess }: SignupFormProps) {
   const { signUpMutation } = useAuth()
+  const { showSuccessToast } = useCustomToast()
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     mode: "onBlur",
@@ -47,6 +76,9 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
     defaultValues: {
       email: "",
       full_name: "",
+      age: "",
+      sex: undefined,
+      city: "",
       password: "",
       confirm_password: "",
     },
@@ -55,8 +87,20 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
   const onSubmit = (data: FormData) => {
     if (signUpMutation.isPending) return
 
-    const { confirm_password: _confirm_password, ...submitData } = data
-    signUpMutation.mutate(submitData)
+    const submitData: UserRegister = {
+      email: data.email,
+      password: data.password,
+      full_name: data.full_name,
+      age: data.age ? Number(data.age) : null,
+      sex: data.sex ? Number(data.sex) : null,
+      city: data.city?.trim() ? data.city.trim() : null,
+    }
+    signUpMutation.mutate(submitData, {
+      onSuccess: () => {
+        showSuccessToast("Account created. Please log in.")
+        onSuccess?.()
+      },
+    })
   }
 
   return (
@@ -96,6 +140,77 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
                     data-testid="email-input"
                     placeholder="user@example.com"
                     type="email"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid grid-cols-2 gap-3">
+            <FormField
+              control={form.control}
+              name="age"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Age</FormLabel>
+                  <FormControl>
+                    <Input
+                      data-testid="age-input"
+                      placeholder="25"
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
+                      max={120}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="sex"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Sex</FormLabel>
+                  <Select
+                    value={field.value ?? ""}
+                    onValueChange={field.onChange}
+                  >
+                    <FormControl>
+                      <SelectTrigger data-testid="sex-select">
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {SEX_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="city"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>City</FormLabel>
+                <FormControl>
+                  <Input
+                    data-testid="city-input"
+                    placeholder="Seoul"
+                    type="text"
                     {...field}
                   />
                 </FormControl>

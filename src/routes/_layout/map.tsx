@@ -1,21 +1,27 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import {
   APIProvider,
   Map as GoogleMap,
-  InfoWindow,
   Marker,
   useMap,
 } from "@vis.gl/react-google-maps"
-import { Plus, RefreshCw, Send, Sparkles, X } from "lucide-react"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { RefreshCw, Send, Sparkles, X } from "lucide-react"
+import { Fragment, useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
-import CreateEventDialog, {
-  type CreateEventFormData,
-} from "@/components/Events/CreateEventDialog"
+import {
+  type ChatHistoryPublic,
+  type ChatMessagePublic,
+  ChatService,
+  type GatheringRecommendPublic,
+  GatheringsService,
+} from "@/client"
+import GatheringRecommendCard from "@/components/Chat/GatheringRecommendCard"
+import GatheringDetailDialog from "@/components/Events/GatheringDetailDialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { type ChatMessage, loadMessages, saveMessages } from "@/lib/chatStorage"
+import { useJoinedGatherings } from "@/lib/joinedGatherings"
 import { cn } from "@/lib/utils"
 
 export const Route = createFileRoute("/_layout/map")({
@@ -33,33 +39,115 @@ const SEOUL = { lat: 37.5665, lng: 126.978 }
 
 type LatLng = { lat: number; lng: number }
 
-type CreatedEvent = CreateEventFormData & { id: string }
+const CHAT_HISTORY_KEY = ["chat-history"] as const
+const RECS_STORAGE_KEY = "chat-recommendations"
+
+function loadRecsFromStorage(): Record<string, GatheringRecommendPublic[]> {
+  if (typeof window === "undefined") return {}
+  try {
+    const raw = window.localStorage.getItem(RECS_STORAGE_KEY)
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
+  }
+}
 
 function MapPage() {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+  const queryClient = useQueryClient()
   const [pos, setPos] = useState<LatLng | null>(null)
   const [loading, setLoading] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
-  const [messages, setMessages] = useState<ChatMessage[]>(loadMessages)
   const [input, setInput] = useState("")
-  const [events, setEvents] = useState<CreatedEvent[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [recommendationsByMsg, setRecommendationsByMsg] =
+    useState<Record<string, GatheringRecommendPublic[]>>(loadRecsFromStorage)
+  const {
+    has: hasJoined,
+    add: addJoined,
+    remove: removeJoined,
+  } = useJoinedGatherings()
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    saveMessages(messages)
+    try {
+      window.localStorage.setItem(
+        RECS_STORAGE_KEY,
+        JSON.stringify(recommendationsByMsg),
+      )
+    } catch {
+      // storage may be unavailable (private mode, quota); silently skip
+    }
+  }, [recommendationsByMsg])
+
+  const { data: gatheringsData } = useQuery({
+    queryKey: ["gatherings"],
+    queryFn: () => GatheringsService.readGatherings(),
+  })
+  const events = gatheringsData?.data ?? []
+
+  const chatHistoryQuery = useQuery({
+    queryKey: CHAT_HISTORY_KEY,
+    queryFn: () => ChatService.getChatHistory(),
+  })
+  const cutoff =
+    typeof window === "undefined"
+      ? null
+      : window.localStorage.getItem("chat-cutoff")
+  const messages = (chatHistoryQuery.data?.data ?? []).filter((m) => {
+    if (!cutoff) return true
+    if (!m.created_at) return true
+    return m.created_at >= cutoff
+  })
+
+  const sendMutation = useMutation({
+    mutationFn: (message: string) =>
+      ChatService.sendMessage({ requestBody: { message } }),
+    onMutate: async (message) => {
+      await queryClient.cancelQueries({ queryKey: CHAT_HISTORY_KEY })
+      const previous =
+        queryClient.getQueryData<ChatHistoryPublic>(CHAT_HISTORY_KEY)
+      const optimistic: ChatMessagePublic = {
+        id: `temp-${Date.now()}`,
+        role: "user",
+        message,
+        created_at: new Date().toISOString(),
+      }
+      queryClient.setQueryData<ChatHistoryPublic>(CHAT_HISTORY_KEY, (old) => ({
+        data: [...(old?.data ?? []), optimistic],
+      }))
+      return { previous }
+    },
+    onSuccess: (response) => {
+      if (response.recommendations && response.recommendations.length > 0) {
+        setRecommendationsByMsg((prev) => ({
+          ...prev,
+          [response.message.id]: response.recommendations ?? [],
+        }))
+      }
+    },
+    onError: (_err, _msg, ctx) => {
+      if (ctx?.previous) {
+        queryClient.setQueryData(CHAT_HISTORY_KEY, ctx.previous)
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: CHAT_HISTORY_KEY })
+    },
+    meta: { errorMessage: "메시지 전송에 실패했어요" },
+  })
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: scroll to bottom whenever a new message arrives
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages])
+  }, [messages.length])
 
   const sendMessage = useCallback(() => {
     const text = input.trim()
     if (!text) return
-    setMessages((prev) => [
-      ...prev,
-      { id: Date.now(), role: "user", content: text },
-    ])
+    sendMutation.mutate(text)
     setInput("")
-  }, [input])
+  }, [input, sendMutation])
 
   const fetchLocation = useCallback(() => {
     if (!navigator.geolocation) {
@@ -129,11 +217,11 @@ function MapPage() {
                 }}
               />
             )}
-            {events.map((e) => (
+            {events.map((g) => (
               <Marker
-                key={e.id}
-                position={{ lat: e.lat, lng: e.lng }}
-                title={e.title}
+                key={g.id}
+                position={{ lat: g.lat, lng: g.lng }}
+                title={g.title}
                 icon={{
                   path: google.maps.SymbolPath.CIRCLE,
                   scale: 10,
@@ -142,34 +230,9 @@ function MapPage() {
                   strokeColor: "#ffffff",
                   strokeWeight: 2,
                 }}
-                onClick={() => setSelectedId(e.id)}
+                onClick={() => setSelectedId(g.id)}
               />
             ))}
-            {(() => {
-              const e = events.find((x) => x.id === selectedId)
-              if (!e) return null
-              return (
-                <InfoWindow
-                  position={{ lat: e.lat, lng: e.lng }}
-                  pixelOffset={[0, -16]}
-                  onCloseClick={() => setSelectedId(null)}
-                >
-                  <div className="space-y-1 text-sm">
-                    <div className="font-semibold">{e.title}</div>
-                    <div className="text-xs text-gray-600">
-                      {e.category} · 정원 {e.capacity}명
-                    </div>
-                    <div className="text-xs text-gray-600">
-                      {new Date(e.date).toLocaleString("ko-KR")}
-                    </div>
-                    <div className="text-xs text-gray-600">
-                      📍 {e.place_name}
-                      {e.city ? ` · ${e.city}` : ""}
-                    </div>
-                  </div>
-                </InfoWindow>
-              )
-            })()}
             <FitToUser pos={pos} />
           </GoogleMap>
           <Button
@@ -182,23 +245,6 @@ function MapPage() {
           >
             <RefreshCw className={loading ? "animate-spin" : ""} />
           </Button>
-          <CreateEventDialog
-            onCreated={(data) => {
-              const id = crypto.randomUUID()
-              setEvents((prev) => [...prev, { ...data, id }])
-              setSelectedId(id)
-            }}
-            trigger={
-              <Button
-                size="icon"
-                variant="secondary"
-                className="absolute right-4 bottom-22 z-10 h-14 w-14 rounded-full shadow-lg"
-                aria-label="Event generator"
-              >
-                <Plus className="size-6" />
-              </Button>
-            }
-          />
           {!chatOpen && (
             <Button
               size="icon"
@@ -210,6 +256,17 @@ function MapPage() {
             </Button>
           )}
         </APIProvider>
+        <GatheringDetailDialog
+          gatheringId={selectedId}
+          joined={selectedId !== null && hasJoined(selectedId)}
+          onOpenChange={(open) => {
+            if (!open) setSelectedId(null)
+          }}
+          onJoinedChange={(g, joined) => {
+            if (joined) addJoined(g)
+            else removeJoined(g.id)
+          }}
+        />
       </div>
       {chatOpen && (
         <aside className="flex h-full w-1/3 shrink-0 flex-col border-l bg-background">
@@ -225,31 +282,50 @@ function MapPage() {
             </Button>
           </div>
           <div className="flex-1 space-y-3 overflow-auto p-4">
-            {messages.length === 0 ? (
+            {chatHistoryQuery.isLoading ? (
+              <p className="text-muted-foreground text-sm">불러오는 중…</p>
+            ) : messages.length === 0 ? (
               <p className="text-muted-foreground text-sm">
                 무엇이든 물어보세요.
               </p>
             ) : (
-              messages.map((m) => (
-                <div
-                  key={m.id}
-                  className={cn(
-                    "flex",
-                    m.role === "user" ? "justify-end" : "justify-start",
-                  )}
-                >
-                  <div
-                    className={cn(
-                      "max-w-[80%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap",
-                      m.role === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted",
+              messages.map((m) => {
+                const recs = recommendationsByMsg[m.id]
+                return (
+                  <Fragment key={m.id}>
+                    <div
+                      className={cn(
+                        "flex",
+                        m.role === "user" ? "justify-end" : "justify-start",
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "max-w-[80%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap",
+                          m.role === "user"
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted",
+                        )}
+                      >
+                        {m.message}
+                      </div>
+                    </div>
+                    {recs && recs.length > 0 && (
+                      <div className="flex flex-col gap-2">
+                        {recs.map((rec) => (
+                          <GatheringRecommendCard
+                            key={rec.id}
+                            gathering={rec}
+                            joined={hasJoined(rec.id)}
+                            onSelect={setSelectedId}
+                            onJoined={addJoined}
+                          />
+                        ))}
+                      </div>
                     )}
-                  >
-                    {m.content}
-                  </div>
-                </div>
-              ))
+                  </Fragment>
+                )
+              })
             )}
             <div ref={messagesEndRef} />
           </div>
@@ -265,11 +341,12 @@ function MapPage() {
               onChange={(e) => setInput(e.target.value)}
               placeholder="메시지를 입력하세요"
               aria-label="메시지 입력"
+              disabled={sendMutation.isPending}
             />
             <Button
               type="submit"
               size="icon"
-              disabled={!input.trim()}
+              disabled={!input.trim() || sendMutation.isPending}
               aria-label="전송"
             >
               <Send />
