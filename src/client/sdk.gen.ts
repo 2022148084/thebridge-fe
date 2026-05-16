@@ -3,7 +3,119 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { GatheringsReadGatheringsData, GatheringsReadGatheringsResponse, GatheringsCreateGatheringData, GatheringsCreateGatheringResponse, GatheringsReadGatheringData, GatheringsReadGatheringResponse, GatheringsUpdateGatheringData, GatheringsUpdateGatheringResponse, GatheringsDeleteGatheringData, GatheringsDeleteGatheringResponse, ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsHealthCheckResponse } from './types.gen';
+
+export class GatheringsService {
+    /**
+     * Read Gatherings
+     * @param data The data for the request.
+     * @param data.skip
+     * @param data.limit
+     * @param data.sportType
+     * @param data.city
+     * @param data.status
+     * @returns GatheringsPublic Successful Response
+     * @throws ApiError
+     */
+    public static readGatherings(data: GatheringsReadGatheringsData = {}): CancelablePromise<GatheringsReadGatheringsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/gatherings/',
+            query: {
+                skip: data.skip,
+                limit: data.limit,
+                sport_type: data.sportType,
+                city: data.city,
+                status: data.status
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Create Gathering
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns GatheringPublic Successful Response
+     * @throws ApiError
+     */
+    public static createGathering(data: GatheringsCreateGatheringData): CancelablePromise<GatheringsCreateGatheringResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/gatherings/',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Gathering
+     * @param data The data for the request.
+     * @param data.id
+     * @returns GatheringPublic Successful Response
+     * @throws ApiError
+     */
+    public static readGathering(data: GatheringsReadGatheringData): CancelablePromise<GatheringsReadGatheringResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/gatherings/{id}',
+            path: {
+                id: data.id
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Update Gathering
+     * @param data The data for the request.
+     * @param data.id
+     * @param data.requestBody
+     * @returns GatheringPublic Successful Response
+     * @throws ApiError
+     */
+    public static updateGathering(data: GatheringsUpdateGatheringData): CancelablePromise<GatheringsUpdateGatheringResponse> {
+        return __request(OpenAPI, {
+            method: 'PUT',
+            url: '/api/v1/gatherings/{id}',
+            path: {
+                id: data.id
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Delete Gathering
+     * @param data The data for the request.
+     * @param data.id
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static deleteGathering(data: GatheringsDeleteGatheringData): CancelablePromise<GatheringsDeleteGatheringResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/gatherings/{id}',
+            path: {
+                id: data.id
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+}
 
 export class ItemsService {
     /**

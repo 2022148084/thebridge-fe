@@ -9,6 +9,62 @@ export type Body_login_login_access_token = {
     client_secret?: (string | null);
 };
 
+export type GatheringCreate = {
+    place_name: string;
+    city: string;
+    lat: number;
+    lng: number;
+    sport_type: 'running' | 'cycling' | 'yoga' | 'stretching' | 'dancing' | 'walking' | 'hiking';
+    starts_at: string;
+    duration_min: number;
+    max_participants: number;
+    level: number;
+    vibe: Array<('quiet pace' | 'social energy' | 'locked in' | 'reset mode')>;
+    description?: (string | null);
+    status?: number;
+};
+
+export type sport_type = 'running' | 'cycling' | 'yoga' | 'stretching' | 'dancing' | 'walking' | 'hiking';
+
+export type GatheringPublic = {
+    id: string;
+    host_id: string;
+    place_name: string;
+    city: string;
+    lat: number;
+    lng: number;
+    sport_type: string;
+    starts_at: string;
+    duration_min: number;
+    max_participants: number;
+    level: number;
+    vibe: Array<(string)>;
+    description: (string | null);
+    status: number;
+    created_at: (string | null);
+    updated_at: (string | null);
+};
+
+export type GatheringsPublic = {
+    data: Array<GatheringPublic>;
+    count: number;
+};
+
+export type GatheringUpdate = {
+    place_name?: (string | null);
+    city?: (string | null);
+    lat?: (number | null);
+    lng?: (number | null);
+    sport_type?: ('running' | 'cycling' | 'yoga' | 'stretching' | 'dancing' | 'walking' | 'hiking' | null);
+    starts_at?: (string | null);
+    duration_min?: (number | null);
+    max_participants?: (number | null);
+    level?: (number | null);
+    vibe?: (Array<('quiet pace' | 'social energy' | 'locked in' | 'reset mode')> | null);
+    description?: (string | null);
+    status?: (number | null);
+};
+
 export type HTTPValidationError = {
     detail?: Array<ValidationError>;
 };
@@ -55,6 +111,9 @@ export type UserCreate = {
     is_active?: boolean;
     is_superuser?: boolean;
     full_name?: (string | null);
+    age?: (number | null);
+    sex?: (number | null);
+    city?: (string | null);
     password: string;
 };
 
@@ -63,14 +122,21 @@ export type UserPublic = {
     is_active?: boolean;
     is_superuser?: boolean;
     full_name?: (string | null);
+    age?: (number | null);
+    sex?: (number | null);
+    city?: (string | null);
     id: string;
     created_at?: (string | null);
+    updated_at?: (string | null);
 };
 
 export type UserRegister = {
     email: string;
     password: string;
     full_name?: (string | null);
+    age?: (number | null);
+    sex?: (number | null);
+    city?: (string | null);
 };
 
 export type UsersPublic = {
@@ -83,12 +149,18 @@ export type UserUpdate = {
     is_active?: boolean;
     is_superuser?: boolean;
     full_name?: (string | null);
+    age?: (number | null);
+    sex?: (number | null);
+    city?: (string | null);
     password?: (string | null);
 };
 
 export type UserUpdateMe = {
     full_name?: (string | null);
     email?: (string | null);
+    age?: (number | null);
+    sex?: (number | null);
+    city?: (string | null);
 };
 
 export type ValidationError = {
@@ -100,6 +172,41 @@ export type ValidationError = {
         [key: string]: unknown;
     };
 };
+
+export type GatheringsReadGatheringsData = {
+    city?: (string | null);
+    limit?: number;
+    skip?: number;
+    sportType?: (string | null);
+    status?: (number | null);
+};
+
+export type GatheringsReadGatheringsResponse = (GatheringsPublic);
+
+export type GatheringsCreateGatheringData = {
+    requestBody: GatheringCreate;
+};
+
+export type GatheringsCreateGatheringResponse = (GatheringPublic);
+
+export type GatheringsReadGatheringData = {
+    id: string;
+};
+
+export type GatheringsReadGatheringResponse = (GatheringPublic);
+
+export type GatheringsUpdateGatheringData = {
+    id: string;
+    requestBody: GatheringUpdate;
+};
+
+export type GatheringsUpdateGatheringResponse = (GatheringPublic);
+
+export type GatheringsDeleteGatheringData = {
+    id: string;
+};
+
+export type GatheringsDeleteGatheringResponse = (Message);
 
 export type ItemsReadItemsData = {
     limit?: number;

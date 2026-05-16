@@ -57,6 +57,357 @@ export const Body_login_login_access_tokenSchema = {
     title: 'Body_login-login_access_token'
 } as const;
 
+export const GatheringCreateSchema = {
+    properties: {
+        place_name: {
+            type: 'string',
+            maxLength: 255,
+            title: 'Place Name'
+        },
+        city: {
+            type: 'string',
+            maxLength: 50,
+            title: 'City'
+        },
+        lat: {
+            type: 'number',
+            title: 'Lat'
+        },
+        lng: {
+            type: 'number',
+            title: 'Lng'
+        },
+        sport_type: {
+            type: 'string',
+            enum: ['running', 'cycling', 'yoga', 'stretching', 'dancing', 'walking', 'hiking'],
+            title: 'Sport Type'
+        },
+        starts_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Starts At'
+        },
+        duration_min: {
+            type: 'integer',
+            exclusiveMinimum: 0,
+            title: 'Duration Min'
+        },
+        max_participants: {
+            type: 'integer',
+            exclusiveMinimum: 0,
+            title: 'Max Participants'
+        },
+        level: {
+            type: 'integer',
+            maximum: 5,
+            minimum: 1,
+            title: 'Level'
+        },
+        vibe: {
+            items: {
+                type: 'string',
+                enum: ['quiet pace', 'social energy', 'locked in', 'reset mode']
+            },
+            type: 'array',
+            title: 'Vibe'
+        },
+        description: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Description'
+        },
+        status: {
+            type: 'integer',
+            maximum: 2,
+            minimum: 0,
+            title: 'Status',
+            default: 0
+        }
+    },
+    type: 'object',
+    required: ['place_name', 'city', 'lat', 'lng', 'sport_type', 'starts_at', 'duration_min', 'max_participants', 'level', 'vibe'],
+    title: 'GatheringCreate'
+} as const;
+
+export const GatheringPublicSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        host_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Host Id'
+        },
+        place_name: {
+            type: 'string',
+            title: 'Place Name'
+        },
+        city: {
+            type: 'string',
+            title: 'City'
+        },
+        lat: {
+            type: 'number',
+            title: 'Lat'
+        },
+        lng: {
+            type: 'number',
+            title: 'Lng'
+        },
+        sport_type: {
+            type: 'string',
+            title: 'Sport Type'
+        },
+        starts_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Starts At'
+        },
+        duration_min: {
+            type: 'integer',
+            title: 'Duration Min'
+        },
+        max_participants: {
+            type: 'integer',
+            title: 'Max Participants'
+        },
+        level: {
+            type: 'integer',
+            title: 'Level'
+        },
+        vibe: {
+            items: {
+                type: 'string'
+            },
+            type: 'array',
+            title: 'Vibe'
+        },
+        description: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Description'
+        },
+        status: {
+            type: 'integer',
+            title: 'Status'
+        },
+        created_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Created At'
+        },
+        updated_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Updated At'
+        }
+    },
+    type: 'object',
+    required: ['id', 'host_id', 'place_name', 'city', 'lat', 'lng', 'sport_type', 'starts_at', 'duration_min', 'max_participants', 'level', 'vibe', 'description', 'status', 'created_at', 'updated_at'],
+    title: 'GatheringPublic'
+} as const;
+
+export const GatheringUpdateSchema = {
+    properties: {
+        place_name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Place Name'
+        },
+        city: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 50
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'City'
+        },
+        lat: {
+            anyOf: [
+                {
+                    type: 'number'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Lat'
+        },
+        lng: {
+            anyOf: [
+                {
+                    type: 'number'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Lng'
+        },
+        sport_type: {
+            anyOf: [
+                {
+                    type: 'string',
+                    enum: ['running', 'cycling', 'yoga', 'stretching', 'dancing', 'walking', 'hiking']
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Sport Type'
+        },
+        starts_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Starts At'
+        },
+        duration_min: {
+            anyOf: [
+                {
+                    type: 'integer',
+                    exclusiveMinimum: 0
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Duration Min'
+        },
+        max_participants: {
+            anyOf: [
+                {
+                    type: 'integer',
+                    exclusiveMinimum: 0
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Max Participants'
+        },
+        level: {
+            anyOf: [
+                {
+                    type: 'integer',
+                    maximum: 5,
+                    minimum: 1
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Level'
+        },
+        vibe: {
+            anyOf: [
+                {
+                    items: {
+                        type: 'string',
+                        enum: ['quiet pace', 'social energy', 'locked in', 'reset mode']
+                    },
+                    type: 'array'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Vibe'
+        },
+        description: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Description'
+        },
+        status: {
+            anyOf: [
+                {
+                    type: 'integer',
+                    maximum: 2,
+                    minimum: 0
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Status'
+        }
+    },
+    type: 'object',
+    title: 'GatheringUpdate'
+} as const;
+
+export const GatheringsPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/GatheringPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['data', 'count'],
+    title: 'GatheringsPublic'
+} as const;
+
 export const HTTPValidationErrorSchema = {
     properties: {
         detail: {
@@ -275,6 +626,42 @@ export const UserCreateSchema = {
             ],
             title: 'Full Name'
         },
+        age: {
+            anyOf: [
+                {
+                    type: 'integer'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Age'
+        },
+        sex: {
+            anyOf: [
+                {
+                    type: 'integer',
+                    maximum: 2,
+                    minimum: 0
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Sex'
+        },
+        city: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'City'
+        },
         password: {
             type: 'string',
             maxLength: 128,
@@ -317,6 +704,42 @@ export const UserPublicSchema = {
             ],
             title: 'Full Name'
         },
+        age: {
+            anyOf: [
+                {
+                    type: 'integer'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Age'
+        },
+        sex: {
+            anyOf: [
+                {
+                    type: 'integer',
+                    maximum: 2,
+                    minimum: 0
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Sex'
+        },
+        city: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'City'
+        },
         id: {
             type: 'string',
             format: 'uuid',
@@ -333,6 +756,18 @@ export const UserPublicSchema = {
                 }
             ],
             title: 'Created At'
+        },
+        updated_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Updated At'
         }
     },
     type: 'object',
@@ -365,6 +800,42 @@ export const UserRegisterSchema = {
                 }
             ],
             title: 'Full Name'
+        },
+        age: {
+            anyOf: [
+                {
+                    type: 'integer'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Age'
+        },
+        sex: {
+            anyOf: [
+                {
+                    type: 'integer',
+                    maximum: 2,
+                    minimum: 0
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Sex'
+        },
+        city: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'City'
         }
     },
     type: 'object',
@@ -408,6 +879,42 @@ export const UserUpdateSchema = {
                 }
             ],
             title: 'Full Name'
+        },
+        age: {
+            anyOf: [
+                {
+                    type: 'integer'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Age'
+        },
+        sex: {
+            anyOf: [
+                {
+                    type: 'integer',
+                    maximum: 2,
+                    minimum: 0
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Sex'
+        },
+        city: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'City'
         },
         password: {
             anyOf: [
@@ -453,6 +960,42 @@ export const UserUpdateMeSchema = {
                 }
             ],
             title: 'Email'
+        },
+        age: {
+            anyOf: [
+                {
+                    type: 'integer'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Age'
+        },
+        sex: {
+            anyOf: [
+                {
+                    type: 'integer',
+                    maximum: 2,
+                    minimum: 0
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Sex'
+        },
+        city: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'City'
         }
     },
     type: 'object',
