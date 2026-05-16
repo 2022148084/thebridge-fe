@@ -35,6 +35,7 @@ This is a hackathon frontend template built with React, Vite, TypeScript, and Bu
 - Keep `src/client` as generated OpenAPI client code.
 - Do not add password recovery, reset password email, test email, or mailcatcher UI/code.
 - Keep logged-in password change functionality.
+- Do not add a `Co-Authored-By: Claude` trailer to commits in this repository.
 
 ## Backend Defaults
 

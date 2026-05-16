@@ -5,3 +5,5 @@ dist/
 .tanstack/
 .env
 .DS_Store
+.omc/
+openapi-ts-error-*.log
