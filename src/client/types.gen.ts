@@ -9,6 +9,33 @@ export type Body_login_login_access_token = {
     client_secret?: (string | null);
 };
 
+export type FriendRequestPublic = {
+    id: string;
+    requester: UserPublic;
+    created_at?: (string | null);
+};
+
+export type FriendRequestsPublic = {
+    data: Array<FriendRequestPublic>;
+    count: number;
+};
+
+export type FriendshipPublic = {
+    id: string;
+    user_id: string;
+    friend_id: string;
+    status: 'pending' | 'accepted';
+    created_at?: (string | null);
+    responded_at?: (string | null);
+};
+
+export type status = 'pending' | 'accepted';
+
+export type FriendsPublic = {
+    data: Array<UserPublic>;
+    count: number;
+};
+
 export type GatheringCreate = {
     place_name: string;
     city: string;
@@ -96,6 +123,14 @@ export type Message = {
     message: string;
 };
 
+export type ParticipantPublic = {
+    id: string;
+    session_id: string;
+    user_id: string;
+    status: string;
+    joined_at: (string | null);
+};
+
 export type Token = {
     access_token: string;
     token_type?: string;
@@ -173,6 +208,44 @@ export type ValidationError = {
     };
 };
 
+export type FriendsReadFriendsData = {
+    limit?: number;
+    skip?: number;
+};
+
+export type FriendsReadFriendsResponse = (FriendsPublic);
+
+export type FriendsReadFriendRequestsData = {
+    limit?: number;
+    skip?: number;
+};
+
+export type FriendsReadFriendRequestsResponse = (FriendRequestsPublic);
+
+export type FriendsAddFriendData = {
+    friendId: string;
+};
+
+export type FriendsAddFriendResponse = (FriendshipPublic);
+
+export type FriendsDeleteFriendData = {
+    friendId: string;
+};
+
+export type FriendsDeleteFriendResponse = (Message);
+
+export type FriendsAcceptFriendRequestData = {
+    requestId: string;
+};
+
+export type FriendsAcceptFriendRequestResponse = (Message);
+
+export type FriendsRejectFriendRequestData = {
+    requestId: string;
+};
+
+export type FriendsRejectFriendRequestResponse = (Message);
+
 export type GatheringsReadGatheringsData = {
     city?: (string | null);
     limit?: number;
@@ -207,6 +280,18 @@ export type GatheringsDeleteGatheringData = {
 };
 
 export type GatheringsDeleteGatheringResponse = (Message);
+
+export type GatheringsJoinGatheringData = {
+    gatheringId: string;
+};
+
+export type GatheringsJoinGatheringResponse = (ParticipantPublic);
+
+export type GatheringsCancelJoinGatheringData = {
+    gatheringId: string;
+};
+
+export type GatheringsCancelJoinGatheringResponse = (Message);
 
 export type ItemsReadItemsData = {
     limit?: number;
@@ -282,6 +367,14 @@ export type UsersRegisterUserData = {
 };
 
 export type UsersRegisterUserResponse = (UserPublic);
+
+export type UsersSearchUsersData = {
+    limit?: number;
+    q: string;
+    skip?: number;
+};
+
+export type UsersSearchUsersResponse = (UsersPublic);
 
 export type UsersReadUserByIdData = {
     userId: string;

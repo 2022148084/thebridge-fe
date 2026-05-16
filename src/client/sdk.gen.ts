@@ -3,7 +3,133 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { GatheringsReadGatheringsData, GatheringsReadGatheringsResponse, GatheringsCreateGatheringData, GatheringsCreateGatheringResponse, GatheringsReadGatheringData, GatheringsReadGatheringResponse, GatheringsUpdateGatheringData, GatheringsUpdateGatheringResponse, GatheringsDeleteGatheringData, GatheringsDeleteGatheringResponse, ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { FriendsReadFriendsData, FriendsReadFriendsResponse, FriendsReadFriendRequestsData, FriendsReadFriendRequestsResponse, FriendsAddFriendData, FriendsAddFriendResponse, FriendsDeleteFriendData, FriendsDeleteFriendResponse, FriendsAcceptFriendRequestData, FriendsAcceptFriendRequestResponse, FriendsRejectFriendRequestData, FriendsRejectFriendRequestResponse, GatheringsReadGatheringsData, GatheringsReadGatheringsResponse, GatheringsCreateGatheringData, GatheringsCreateGatheringResponse, GatheringsReadGatheringData, GatheringsReadGatheringResponse, GatheringsUpdateGatheringData, GatheringsUpdateGatheringResponse, GatheringsDeleteGatheringData, GatheringsDeleteGatheringResponse, GatheringsJoinGatheringData, GatheringsJoinGatheringResponse, GatheringsCancelJoinGatheringData, GatheringsCancelJoinGatheringResponse, ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersSearchUsersData, UsersSearchUsersResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsHealthCheckResponse } from './types.gen';
+
+export class FriendsService {
+    /**
+     * Read Friends
+     * @param data The data for the request.
+     * @param data.skip
+     * @param data.limit
+     * @returns FriendsPublic Successful Response
+     * @throws ApiError
+     */
+    public static readFriends(data: FriendsReadFriendsData = {}): CancelablePromise<FriendsReadFriendsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/friends/',
+            query: {
+                skip: data.skip,
+                limit: data.limit
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Friend Requests
+     * @param data The data for the request.
+     * @param data.skip
+     * @param data.limit
+     * @returns FriendRequestsPublic Successful Response
+     * @throws ApiError
+     */
+    public static readFriendRequests(data: FriendsReadFriendRequestsData = {}): CancelablePromise<FriendsReadFriendRequestsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/friends/requests',
+            query: {
+                skip: data.skip,
+                limit: data.limit
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Add Friend
+     * @param data The data for the request.
+     * @param data.friendId
+     * @returns FriendshipPublic Successful Response
+     * @throws ApiError
+     */
+    public static addFriend(data: FriendsAddFriendData): CancelablePromise<FriendsAddFriendResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/friends/{friend_id}',
+            path: {
+                friend_id: data.friendId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Delete Friend
+     * @param data The data for the request.
+     * @param data.friendId
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static deleteFriend(data: FriendsDeleteFriendData): CancelablePromise<FriendsDeleteFriendResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/friends/{friend_id}',
+            path: {
+                friend_id: data.friendId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Accept Friend Request
+     * @param data The data for the request.
+     * @param data.requestId
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static acceptFriendRequest(data: FriendsAcceptFriendRequestData): CancelablePromise<FriendsAcceptFriendRequestResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/friends/requests/{request_id}/accept',
+            path: {
+                request_id: data.requestId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Reject Friend Request
+     * @param data The data for the request.
+     * @param data.requestId
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static rejectFriendRequest(data: FriendsRejectFriendRequestData): CancelablePromise<FriendsRejectFriendRequestResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/friends/requests/{request_id}/reject',
+            path: {
+                request_id: data.requestId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+}
 
 export class GatheringsService {
     /**
@@ -109,6 +235,46 @@ export class GatheringsService {
             url: '/api/v1/gatherings/{id}',
             path: {
                 id: data.id
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Join Gathering
+     * @param data The data for the request.
+     * @param data.gatheringId
+     * @returns ParticipantPublic Successful Response
+     * @throws ApiError
+     */
+    public static joinGathering(data: GatheringsJoinGatheringData): CancelablePromise<GatheringsJoinGatheringResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/gatherings/{gathering_id}/participants',
+            path: {
+                gathering_id: data.gatheringId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Cancel Join Gathering
+     * @param data The data for the request.
+     * @param data.gatheringId
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static cancelJoinGathering(data: GatheringsCancelJoinGatheringData): CancelablePromise<GatheringsCancelJoinGatheringResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/gatherings/{gathering_id}/participants/me',
+            path: {
+                gathering_id: data.gatheringId
             },
             errors: {
                 422: 'Validation Error'
@@ -387,6 +553,30 @@ export class UsersService {
             url: '/api/v1/users/signup',
             body: data.requestBody,
             mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Search Users
+     * @param data The data for the request.
+     * @param data.q
+     * @param data.skip
+     * @param data.limit
+     * @returns UsersPublic Successful Response
+     * @throws ApiError
+     */
+    public static searchUsers(data: UsersSearchUsersData): CancelablePromise<UsersSearchUsersResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/users/search',
+            query: {
+                q: data.q,
+                skip: data.skip,
+                limit: data.limit
+            },
             errors: {
                 422: 'Validation Error'
             }
