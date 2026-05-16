@@ -20,7 +20,6 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button"
 import useAuth from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
-import { FIGMA_DIALOG } from "@/lib/figma-styles"
 import { cn } from "@/lib/utils"
 import { handleError } from "@/utils"
 
@@ -95,9 +94,9 @@ export function GatheringDetailDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
-          FIGMA_DIALOG,
+          "rounded-[25px] border-0 bg-[#b6e3c8] p-6 text-[#161b24] shadow-[0_8px_60px_-10px_rgba(0,0,0,0.18)]",
           "max-h-[90vh] overflow-hidden",
-          canChat ? "sm:max-w-3xl" : "sm:max-w-md",
+          canChat ? "sm:max-w-4xl" : "sm:max-w-md",
         )}
       >
         {isLoading || !gathering ? (
@@ -109,7 +108,7 @@ export function GatheringDetailDialog({
           </DialogHeader>
         ) : (
           <>
-            <DialogHeader>
+            <DialogHeader className="sr-only">
               <DialogTitle>{gathering.title}</DialogTitle>
               <DialogDescription>
                 {sportLabel} · Lv.{gathering.level}
@@ -118,15 +117,15 @@ export function GatheringDetailDialog({
 
             {canChat ? (
               <>
-                <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1 text-sm sm:hidden">
+                <div className="grid grid-cols-2 gap-1 rounded-lg bg-white/60 p-1 text-sm sm:hidden">
                   <button
                     type="button"
                     onClick={() => setMobileView("details")}
                     className={cn(
                       "rounded-md py-1.5 transition-colors",
                       mobileView === "details"
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground",
+                        ? "bg-white text-[#161b24] shadow-sm"
+                        : "text-[#161b24]/60",
                     )}
                   >
                     상세
@@ -137,27 +136,32 @@ export function GatheringDetailDialog({
                     className={cn(
                       "rounded-md py-1.5 transition-colors",
                       mobileView === "chat"
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground",
+                        ? "bg-white text-[#161b24] shadow-sm"
+                        : "text-[#161b24]/60",
                     )}
                   >
                     채팅
                   </button>
                 </div>
 
-                <div className="grid min-h-0 sm:grid-cols-[1fr_1px_minmax(260px,1fr)] sm:gap-4">
+                <div className="grid min-h-0 gap-4 sm:grid-cols-[1fr_minmax(280px,1fr)]">
                   <div
                     className={cn(
-                      "min-h-0",
-                      mobileView !== "details" && "hidden sm:block",
+                      "flex min-h-0 flex-col gap-4",
+                      mobileView !== "details" && "hidden sm:flex",
                     )}
                   >
-                    <DetailsBlock gathering={gathering} />
+                    <h2 className="font-['Stack_Sans_Headline'] text-3xl font-bold text-[#161b24]">
+                      Event Details
+                    </h2>
+                    <DetailsBlock
+                      gathering={gathering}
+                      sportLabel={sportLabel}
+                    />
                   </div>
-                  <div className="hidden sm:block bg-border" />
                   <div
                     className={cn(
-                      "h-[55vh] min-h-0 sm:h-[60vh]",
+                      "h-[60vh] min-h-0 sm:h-[65vh]",
                       mobileView !== "chat" && "hidden sm:block",
                     )}
                   >
@@ -169,21 +173,30 @@ export function GatheringDetailDialog({
                 </div>
               </>
             ) : (
-              <DetailsBlock gathering={gathering} />
+              <div className="flex flex-col gap-4">
+                <h2 className="font-['Stack_Sans_Headline'] text-3xl font-bold text-[#161b24]">
+                  Event Details
+                </h2>
+                <DetailsBlock gathering={gathering} sportLabel={sportLabel} />
+              </div>
             )}
 
-            <DialogFooter>
+            <DialogFooter className="gap-2">
               {isHost ? (
                 <EditGatheringDialog
                   gathering={gathering}
-                  trigger={<Button>수정하기</Button>}
+                  trigger={
+                    <Button className="bg-[#44a16f] text-white hover:bg-[#3a8f60]">
+                      수정하기
+                    </Button>
+                  }
                 />
               ) : joined ? (
                 <LoadingButton
-                  variant="outline"
                   loading={cancelMutation.isPending}
                   disabled={busy}
                   onClick={() => cancelMutation.mutate(gathering.id)}
+                  className="bg-[#f8c4c4] font-semibold text-[#161b24] hover:bg-[#f5b0b0]"
                 >
                   참가 취소
                 </LoadingButton>
@@ -192,6 +205,7 @@ export function GatheringDetailDialog({
                   loading={joinMutation.isPending}
                   disabled={busy}
                   onClick={() => joinMutation.mutate(gathering.id)}
+                  className="bg-[#44a16f] text-white hover:bg-[#3a8f60]"
                 >
                   참가하기
                 </LoadingButton>
@@ -200,6 +214,7 @@ export function GatheringDetailDialog({
                 variant="ghost"
                 onClick={() => onOpenChange(false)}
                 disabled={busy}
+                className="text-[#161b24]/70 hover:bg-white/40 hover:text-[#161b24]"
               >
                 닫기
               </Button>
@@ -211,54 +226,64 @@ export function GatheringDetailDialog({
   )
 }
 
-function DetailsBlock({ gathering }: { gathering: GatheringPublic }) {
-  return (
-    <div className="space-y-3 text-sm">
-      <DetailRow label="일시">
-        {new Date(gathering.starts_at).toLocaleString("ko-KR")} ·{" "}
-        {gathering.duration_min}분
-      </DetailRow>
-      <DetailRow label="장소">
-        📍 {gathering.place_name}
-        {gathering.city ? ` · ${gathering.city}` : ""}
-      </DetailRow>
-      <DetailRow label="정원">최대 {gathering.max_participants}명</DetailRow>
-      {gathering.vibe.length > 0 && (
-        <DetailRow label="분위기">
-          <div className="flex flex-wrap gap-1">
-            {gathering.vibe.map((v) => (
-              <span
-                key={v}
-                className="rounded-full bg-muted px-2 py-0.5 text-xs"
-              >
-                {v}
-              </span>
-            ))}
-          </div>
-        </DetailRow>
-      )}
-      {gathering.description && (
-        <DetailRow label="설명">
-          <p className="whitespace-pre-wrap text-muted-foreground">
-            {gathering.description}
-          </p>
-        </DetailRow>
-      )}
-    </div>
-  )
-}
+const DIFFICULTY_LABELS = [
+  "",
+  "Very Easy",
+  "Easy",
+  "Normal",
+  "Hard",
+  "Very Hard",
+]
 
-function DetailRow({
-  label,
-  children,
+function DetailsBlock({
+  gathering,
+  sportLabel,
 }: {
-  label: string
-  children: React.ReactNode
+  gathering: GatheringPublic
+  sportLabel: string
 }) {
+  const startsAt = new Date(gathering.starts_at)
+  const dateText = `${startsAt.toLocaleDateString("en-GB")}, ${startsAt.toLocaleTimeString(
+    "en-US",
+    { hour: "numeric", minute: "2-digit" },
+  )}`
+  const difficulty =
+    DIFFICULTY_LABELS[gathering.level] ?? `Lv.${gathering.level}`
+
   return (
-    <div className="grid grid-cols-[64px_1fr] items-start gap-3">
-      <span className="text-xs font-medium text-muted-foreground">{label}</span>
-      <div>{children}</div>
+    <div className="space-y-2 rounded-2xl bg-white p-5 text-sm leading-relaxed text-[#161b24] shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08)]">
+      <p>
+        <span className="font-bold">Event Title:</span> {gathering.title}
+      </p>
+      <p>
+        <span className="font-bold">Category:</span> {sportLabel}
+      </p>
+      <p>
+        <span className="font-bold">Location:</span> {gathering.place_name}
+        {gathering.city ? ` · ${gathering.city}` : ""}
+      </p>
+      <p>
+        <span className="font-bold">Date & Time:</span> {dateText}
+      </p>
+      <p>
+        <span className="font-bold">Capacity:</span>{" "}
+        {gathering.max_participants}
+      </p>
+      {gathering.vibe.length > 0 && (
+        <p>
+          <span className="font-bold">Energy Level:</span>{" "}
+          {gathering.vibe.join(", ")}
+        </p>
+      )}
+      <p>
+        <span className="font-bold">Difficulty:</span> {difficulty}
+      </p>
+      {gathering.description && (
+        <p className="pt-2">
+          <span className="font-bold">Description:</span>{" "}
+          <span className="whitespace-pre-wrap">{gathering.description}</span>
+        </p>
+      )}
     </div>
   )
 }

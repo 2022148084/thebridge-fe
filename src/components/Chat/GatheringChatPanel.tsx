@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react"
+import { Send } from "lucide-react"
+import { Fragment, useEffect, useMemo, useRef, useState } from "react"
 
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import useAuth from "@/hooks/useAuth"
 import {
@@ -42,10 +42,19 @@ export function GatheringChatPanel({
 
   const canSend = status === "open" && draft.trim().length > 0
 
+  const daySeparatorText = useMemo(() => {
+    if (messages.length === 0) return null
+    const first = new Date(messages[0].sent_at)
+    return `Today, ${first.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+    })}`
+  }, [messages])
+
   return (
-    <div className="flex h-full min-h-0 flex-col rounded-md border bg-card">
-      <div className="flex items-center justify-between border-b px-3 py-2">
-        <span className="text-xs font-medium text-muted-foreground">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl bg-[#f1f2f4]">
+      <div className="flex items-center justify-between bg-white px-3 py-2">
+        <span className="text-xs font-semibold text-[#44a16f]">
           참가자 채팅
         </span>
         <ChatStatusBadge status={status} />
@@ -53,39 +62,56 @@ export function GatheringChatPanel({
 
       <div
         ref={scrollRef}
-        className="flex-1 min-h-0 space-y-2 overflow-y-auto px-3 py-3"
+        className="flex-1 min-h-0 space-y-3 overflow-y-auto px-3 py-3"
       >
         {messages.length === 0 ? (
-          <p className="pt-6 text-center text-xs text-muted-foreground">
+          <p className="pt-6 text-center text-xs text-[#979797]">
             {status === "open"
               ? "아직 메시지가 없어요. 인사를 건네보세요!"
               : "연결되면 대화를 시작할 수 있어요."}
           </p>
         ) : (
-          messages.map((m, i) => (
-            <MessageBubble
-              key={`${m.sent_at}-${m.user_id}-${i}`}
-              message={m}
-              isMine={!!user && user.id === m.user_id}
-            />
-          ))
+          <>
+            {daySeparatorText && (
+              <div className="flex items-center gap-3 py-1">
+                <div className="h-px flex-1 bg-[#b3b9c2]/40" />
+                <span className="text-xs text-[#979797]">
+                  {daySeparatorText}
+                </span>
+                <div className="h-px flex-1 bg-[#b3b9c2]/40" />
+              </div>
+            )}
+            {messages.map((m, i) => (
+              <MessageBubble
+                key={`${m.sent_at}-${m.user_id}-${i}`}
+                message={m}
+                isMine={!!user && user.id === m.user_id}
+              />
+            ))}
+          </>
         )}
       </div>
 
       <form
         onSubmit={handleSubmit}
-        className="flex items-center gap-2 border-t p-2"
+        className="flex items-center gap-2 bg-white p-3"
       >
         <Input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder={status === "open" ? "메시지를 입력하세요" : "연결 중…"}
+          placeholder={status === "open" ? "Type Message..." : "연결 중…"}
           disabled={status !== "open"}
           maxLength={500}
+          className="h-11 rounded-full border-[#b3b9c2]/40 bg-[#f1f2f4] px-4 text-[#161b24] shadow-none placeholder:text-[#979797] focus-visible:border-[#44a16f] focus-visible:ring-[#44a16f]/30"
         />
-        <Button type="submit" size="sm" disabled={!canSend}>
-          전송
-        </Button>
+        <button
+          type="submit"
+          disabled={!canSend}
+          aria-label="전송"
+          className="flex size-10 shrink-0 items-center justify-center text-[#161b24] transition hover:text-[#44a16f] disabled:opacity-40"
+        >
+          <Send className="size-5" />
+        </button>
       </form>
     </div>
   )
@@ -105,12 +131,12 @@ function ChatStatusBadge({ status }: { status: GatheringChatStatus }) {
 
   const cls =
     status === "open"
-      ? "text-emerald-500"
+      ? "text-[#44a16f]"
       : status === "connecting"
         ? "text-amber-500"
         : status === "error"
           ? "text-destructive"
-          : "text-muted-foreground"
+          : "text-[#979797]"
 
   return <span className={cn("text-[11px]", cls)}>{label}</span>
 }
@@ -122,35 +148,32 @@ function MessageBubble({
   message: GatheringChatMessage
   isMine: boolean
 }) {
-  const time = new Date(message.sent_at).toLocaleTimeString("ko-KR", {
-    hour: "2-digit",
+  const time = new Date(message.sent_at).toLocaleTimeString("en-US", {
+    hour: "numeric",
     minute: "2-digit",
   })
 
   return (
-    <div
-      className={cn(
-        "flex flex-col gap-0.5",
-        isMine ? "items-end" : "items-start",
-      )}
-    >
-      {!isMine && (
-        <span className="px-1 text-[11px] text-muted-foreground">
-          {message.user_name}
-        </span>
-      )}
+    <Fragment>
       <div
-        className={cn(
-          "max-w-[80%] rounded-2xl px-3 py-1.5 text-sm",
-          isMine
-            ? "bg-primary text-primary-foreground"
-            : "bg-muted text-foreground",
-        )}
+        className={cn("flex flex-col", isMine ? "items-end" : "items-start")}
       >
-        <p className="whitespace-pre-wrap break-words">{message.message}</p>
+        {!isMine && (
+          <span className="mb-0.5 px-1 text-[11px] text-[#979797]">
+            {message.user_name}
+          </span>
+        )}
+        <div
+          className={cn(
+            "max-w-[85%] rounded-2xl px-4 py-2 text-sm",
+            isMine ? "bg-[#5fc295] text-white" : "bg-white text-[#161b24]",
+          )}
+        >
+          <p className="whitespace-pre-wrap break-words">{message.message}</p>
+        </div>
+        <span className="mt-1 px-1 text-[11px] text-[#979797]">{time}</span>
       </div>
-      <span className="px-1 text-[10px] text-muted-foreground">{time}</span>
-    </div>
+    </Fragment>
   )
 }
 
