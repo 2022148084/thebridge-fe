@@ -33,7 +33,7 @@ import { handleError } from "@/utils"
 
 const formSchema = z
   .object({
-    email: z.email({ message: "Invalid email address" }),
+    email: z.string().email({ message: "Invalid email address" }),
     full_name: z.string().optional(),
     password: z
       .string()
