@@ -70,7 +70,7 @@ function MapPage() {
   }
 
   return (
-    <div className="relative h-[calc(100vh-12rem)] w-full overflow-hidden rounded-md border">
+    <div className="relative h-full w-full overflow-hidden">
       <APIProvider apiKey={apiKey}>
         <GoogleMap
           defaultCenter={SEOUL}
@@ -81,6 +81,7 @@ function MapPage() {
           fullscreenControl={false}
           mapTypeControl={false}
           rotateControl={false}
+          cameraControl={false}
           isFractionalZoomEnabled
           styles={[{ featureType: "poi", stylers: [{ visibility: "off" }] }]}
         >
