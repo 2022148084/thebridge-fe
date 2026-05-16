@@ -1,11 +1,11 @@
 import { Link as RouterLink, useRouterState } from "@tanstack/react-router"
 import {
-  Briefcase,
   ChevronsUpDown,
   LogOut,
   type LucideIcon,
   MapPin,
   Settings,
+  Star,
   UserRound,
   Users,
 } from "lucide-react"
@@ -33,7 +33,7 @@ type NavItem = {
 const baseItems: NavItem[] = [
   { icon: MapPin, title: "Map", path: "/map" },
   { icon: UserRound, title: "Friends", path: "/friends" },
-  { icon: Briefcase, title: "Items", path: "/items" },
+  { icon: Star, title: "Review", path: "/review" },
 ]
 
 export function BottomNav() {
