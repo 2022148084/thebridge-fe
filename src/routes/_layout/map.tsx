@@ -14,8 +14,11 @@ import {
   type ChatHistoryPublic,
   type ChatMessagePublic,
   ChatService,
+  type GatheringPublic,
   type GatheringRecommendPublic,
   GatheringsService,
+  type UserLocationPublic,
+  UsersService,
 } from "@/client"
 import GatheringRecommendCard from "@/components/Chat/GatheringRecommendCard"
 import GatheringDetailDialog from "@/components/Events/GatheringDetailDialog"
@@ -40,7 +43,9 @@ const SEOUL = { lat: 37.5665, lng: 126.978 }
 type LatLng = { lat: number; lng: number }
 
 const CHAT_HISTORY_KEY = ["chat-history"] as const
+const LOCATION_MAP_KEY = ["location-map"] as const
 const RECS_STORAGE_KEY = "chat-recommendations"
+const LOCATION_STALE_MS = 5 * 60 * 1000
 
 function loadRecsFromStorage(): Record<string, GatheringRecommendPublic[]> {
   if (typeof window === "undefined") return {}
@@ -64,6 +69,7 @@ function MapPage() {
     useState<Record<string, GatheringRecommendPublic[]>>(loadRecsFromStorage)
   const { has: hasJoined, markJoined, markUnjoined } = useJoinedGatherings()
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const lastLocationSyncRef = useRef<number>(0)
 
   useEffect(() => {
     try {
@@ -81,6 +87,31 @@ function MapPage() {
     queryFn: () => GatheringsService.readGatherings(),
   })
   const events = gatheringsData?.data ?? []
+
+  const locationMapQuery = useQuery({
+    queryKey: LOCATION_MAP_KEY,
+    queryFn: () => UsersService.getLocationMap(),
+    staleTime: 30_000,
+  })
+  const friendLocations = (locationMapQuery.data?.friends ?? []).filter(
+    (f): f is typeof f & { lat: number; lng: number } =>
+      f.lat != null && f.lng != null,
+  )
+
+  const syncServerLocation = useCallback(
+    async (loc: LatLng) => {
+      try {
+        await UsersService.updateUserLocation({
+          requestBody: { lat: loc.lat, lng: loc.lng },
+        })
+        lastLocationSyncRef.current = Date.now()
+        queryClient.invalidateQueries({ queryKey: LOCATION_MAP_KEY })
+      } catch {
+        // best-effort; chat still works against last-known server location
+      }
+    },
+    [queryClient],
+  )
 
   const chatHistoryQuery = useQuery({
     queryKey: CHAT_HISTORY_KEY,
@@ -138,35 +169,56 @@ function MapPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages.length])
 
-  const sendMessage = useCallback(() => {
+  const getBrowserLocation = useCallback(
+    (silent = false) =>
+      new Promise<LatLng | null>((resolve) => {
+        if (!navigator.geolocation) {
+          if (!silent) {
+            toast.error("Something went wrong!", {
+              description: "이 브라우저는 위치 정보를 지원하지 않습니다.",
+            })
+          }
+          resolve(null)
+          return
+        }
+        navigator.geolocation.getCurrentPosition(
+          (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
+          (err) => {
+            if (!silent) {
+              toast.error("Something went wrong!", {
+                description: `위치를 가져오지 못했어요: ${err.message}`,
+              })
+            }
+            resolve(null)
+          },
+          { enableHighAccuracy: true, timeout: 10000 },
+        )
+      }),
+    [],
+  )
+
+  const fetchLocation = useCallback(async () => {
+    setLoading(true)
+    const loc = await getBrowserLocation()
+    setLoading(false)
+    if (!loc) return
+    setPos(loc)
+    await syncServerLocation(loc)
+  }, [getBrowserLocation, syncServerLocation])
+
+  const sendMessage = useCallback(async () => {
     const text = input.trim()
     if (!text) return
-    sendMutation.mutate(text)
     setInput("")
-  }, [input, sendMutation])
-
-  const fetchLocation = useCallback(() => {
-    if (!navigator.geolocation) {
-      toast.error("Something went wrong!", {
-        description: "이 브라우저는 위치 정보를 지원하지 않습니다.",
-      })
-      return
+    if (Date.now() - lastLocationSyncRef.current >= LOCATION_STALE_MS) {
+      const loc = await getBrowserLocation(true)
+      if (loc) {
+        setPos(loc)
+        await syncServerLocation(loc)
+      }
     }
-    setLoading(true)
-    navigator.geolocation.getCurrentPosition(
-      (p) => {
-        setPos({ lat: p.coords.latitude, lng: p.coords.longitude })
-        setLoading(false)
-      },
-      (err) => {
-        toast.error("Something went wrong!", {
-          description: `위치를 가져오지 못했어요: ${err.message}`,
-        })
-        setLoading(false)
-      },
-      { enableHighAccuracy: true, timeout: 10000 },
-    )
-  }, [])
+    sendMutation.mutate(text)
+  }, [input, sendMutation, getBrowserLocation, syncServerLocation])
 
   useEffect(() => {
     fetchLocation()
@@ -200,36 +252,12 @@ function MapPage() {
             isFractionalZoomEnabled
             styles={[{ featureType: "poi", stylers: [{ visibility: "off" }] }]}
           >
-            {pos && (
-              <Marker
-                position={pos}
-                icon={{
-                  path: google.maps.SymbolPath.CIRCLE,
-                  scale: 8,
-                  fillColor: "#4285F4",
-                  fillOpacity: 1,
-                  strokeColor: "#ffffff",
-                  strokeWeight: 2,
-                }}
-              />
-            )}
-            {events.map((g) => (
-              <Marker
-                key={g.id}
-                position={{ lat: g.lat, lng: g.lng }}
-                title={g.title}
-                icon={{
-                  path: "M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z",
-                  fillColor: "#F58F8F",
-                  fillOpacity: 1,
-                  strokeColor: "#ffffff",
-                  strokeWeight: 2,
-                  scale: 1,
-                  anchor: new google.maps.Point(12, 36),
-                }}
-                onClick={() => setSelectedId(g.id)}
-              />
-            ))}
+            <MapMarkers
+              pos={pos}
+              friends={friendLocations}
+              events={events}
+              onEventClick={setSelectedId}
+            />
             <FitToUser pos={pos} />
           </GoogleMap>
           <Button
@@ -389,6 +417,72 @@ function MapPage() {
         </aside>
       )}
     </div>
+  )
+}
+
+type FriendLocation = UserLocationPublic & { lat: number; lng: number }
+
+function MapMarkers({
+  pos,
+  friends,
+  events,
+  onEventClick,
+}: {
+  pos: LatLng | null
+  friends: FriendLocation[]
+  events: GatheringPublic[]
+  onEventClick: (id: string) => void
+}) {
+  const map = useMap()
+  if (!map) return null
+  return (
+    <>
+      {pos && (
+        <Marker
+          position={pos}
+          icon={{
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor: "#4285F4",
+            fillOpacity: 1,
+            strokeColor: "#ffffff",
+            strokeWeight: 2,
+          }}
+        />
+      )}
+      {friends.map((friend) => (
+        <Marker
+          key={friend.id}
+          position={{ lat: friend.lat, lng: friend.lng }}
+          title={friend.full_name ?? undefined}
+          icon={{
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor: "#44a16f",
+            fillOpacity: 1,
+            strokeColor: "#ffffff",
+            strokeWeight: 2,
+          }}
+        />
+      ))}
+      {events.map((g) => (
+        <Marker
+          key={g.id}
+          position={{ lat: g.lat, lng: g.lng }}
+          title={g.title}
+          icon={{
+            path: "M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z",
+            fillColor: "#F58F8F",
+            fillOpacity: 1,
+            strokeColor: "#ffffff",
+            strokeWeight: 2,
+            scale: 1,
+            anchor: new google.maps.Point(12, 36),
+          }}
+          onClick={() => onEventClick(g.id)}
+        />
+      ))}
+    </>
   )
 }
 
