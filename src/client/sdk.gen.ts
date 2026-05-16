@@ -3,7 +3,52 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { FriendsReadFriendsData, FriendsReadFriendsResponse, FriendsReadFriendRequestsData, FriendsReadFriendRequestsResponse, FriendsAddFriendData, FriendsAddFriendResponse, FriendsDeleteFriendData, FriendsDeleteFriendResponse, FriendsAcceptFriendRequestData, FriendsAcceptFriendRequestResponse, FriendsRejectFriendRequestData, FriendsRejectFriendRequestResponse, GatheringsReadGatheringsData, GatheringsReadGatheringsResponse, GatheringsCreateGatheringData, GatheringsCreateGatheringResponse, GatheringsReadGatheringData, GatheringsReadGatheringResponse, GatheringsUpdateGatheringData, GatheringsUpdateGatheringResponse, GatheringsDeleteGatheringData, GatheringsDeleteGatheringResponse, GatheringsJoinGatheringData, GatheringsJoinGatheringResponse, GatheringsCancelJoinGatheringData, GatheringsCancelJoinGatheringResponse, ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersSearchUsersData, UsersSearchUsersResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { ChatSendMessageData, ChatSendMessageResponse, ChatGetChatHistoryResponse, ChatGetPreferencesResponse, FriendsReadFriendsData, FriendsReadFriendsResponse, FriendsReadFriendRequestsData, FriendsReadFriendRequestsResponse, FriendsAddFriendData, FriendsAddFriendResponse, FriendsDeleteFriendData, FriendsDeleteFriendResponse, FriendsAcceptFriendRequestData, FriendsAcceptFriendRequestResponse, FriendsRejectFriendRequestData, FriendsRejectFriendRequestResponse, GatheringsReadGatheringsData, GatheringsReadGatheringsResponse, GatheringsCreateGatheringData, GatheringsCreateGatheringResponse, GatheringsReadGatheringData, GatheringsReadGatheringResponse, GatheringsUpdateGatheringData, GatheringsUpdateGatheringResponse, GatheringsDeleteGatheringData, GatheringsDeleteGatheringResponse, GatheringsJoinGatheringData, GatheringsJoinGatheringResponse, GatheringsCancelJoinGatheringData, GatheringsCancelJoinGatheringResponse, ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersSearchUsersData, UsersSearchUsersResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsHealthCheckResponse } from './types.gen';
+
+export class ChatService {
+    /**
+     * Send Message
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns ChatMessagePublic Successful Response
+     * @throws ApiError
+     */
+    public static sendMessage(data: ChatSendMessageData): CancelablePromise<ChatSendMessageResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/chat/',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Get Chat History
+     * @returns ChatHistoryPublic Successful Response
+     * @throws ApiError
+     */
+    public static getChatHistory(): CancelablePromise<ChatGetChatHistoryResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/chat/history'
+        });
+    }
+    
+    /**
+     * Get Preferences
+     * @returns UserPreferencesPublic Successful Response
+     * @throws ApiError
+     */
+    public static getPreferences(): CancelablePromise<ChatGetPreferencesResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/chat/preferences'
+        });
+    }
+}
 
 export class FriendsService {
     /**

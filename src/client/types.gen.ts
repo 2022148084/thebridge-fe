@@ -9,6 +9,21 @@ export type Body_login_login_access_token = {
     client_secret?: (string | null);
 };
 
+export type ChatHistoryPublic = {
+    data: Array<ChatMessagePublic>;
+};
+
+export type ChatMessageInput = {
+    message: string;
+};
+
+export type ChatMessagePublic = {
+    id: string;
+    role: string;
+    message: string;
+    created_at: (string | null);
+};
+
 export type FriendRequestPublic = {
     id: string;
     requester: UserPublic;
@@ -152,6 +167,12 @@ export type UserCreate = {
     password: string;
 };
 
+export type UserPreferencesPublic = {
+    core_summary: (string | null);
+    recent_summary: (string | null);
+    updated_at: (string | null);
+};
+
 export type UserPublic = {
     email: string;
     is_active?: boolean;
@@ -207,6 +228,16 @@ export type ValidationError = {
         [key: string]: unknown;
     };
 };
+
+export type ChatSendMessageData = {
+    requestBody: ChatMessageInput;
+};
+
+export type ChatSendMessageResponse = (ChatMessagePublic);
+
+export type ChatGetChatHistoryResponse = (ChatHistoryPublic);
+
+export type ChatGetPreferencesResponse = (UserPreferencesPublic);
 
 export type FriendsReadFriendsData = {
     limit?: number;
