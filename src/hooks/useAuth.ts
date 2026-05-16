@@ -8,6 +8,7 @@ import {
   type UserRegister,
   UsersService,
 } from "@/client"
+import { clearMessages } from "@/lib/chatStorage"
 import { handleError } from "@/utils"
 import useCustomToast from "./useCustomToast"
 
@@ -55,6 +56,7 @@ const useAuth = () => {
 
   const logout = () => {
     localStorage.removeItem("access_token")
+    clearMessages()
     navigate({ to: "/login" })
   }
 
