@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useEffect, useState } from "react"
 
 import { type GatheringPublic, GatheringsService } from "@/client"
+import GatheringChatPanel from "@/components/Chat/GatheringChatPanel"
 import {
   SPORT_LABELS,
   type SportType,
@@ -18,6 +20,7 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button"
 import useAuth from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
+import { cn } from "@/lib/utils"
 import { handleError } from "@/utils"
 
 interface GatheringDetailDialogProps {
@@ -26,6 +29,8 @@ interface GatheringDetailDialogProps {
   onOpenChange: (open: boolean) => void
   onJoinedChange: (gathering: GatheringPublic, joined: boolean) => void
 }
+
+type MobileView = "details" | "chat"
 
 export function GatheringDetailDialog({
   gatheringId,
@@ -37,6 +42,11 @@ export function GatheringDetailDialog({
   const queryClient = useQueryClient()
   const { user } = useAuth()
   const { showSuccessToast, showErrorToast } = useCustomToast()
+  const [mobileView, setMobileView] = useState<MobileView>("details")
+
+  useEffect(() => {
+    if (!open) setMobileView("details")
+  }, [open])
 
   const { data: gathering, isLoading } = useQuery({
     queryKey: ["gathering", gatheringId],
@@ -78,10 +88,16 @@ export function GatheringDetailDialog({
 
   const busy = joinMutation.isPending || cancelMutation.isPending
   const isHost = !!gathering && !!user && gathering.host_id === user.id
+  const canChat = !!gathering && (isHost || joined)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent
+        className={cn(
+          "max-h-[90vh] overflow-hidden",
+          canChat ? "sm:max-w-3xl" : "sm:max-w-md",
+        )}
+      >
         {isLoading || !gathering ? (
           <DialogHeader>
             <DialogTitle>불러오는 중…</DialogTitle>
@@ -98,40 +114,61 @@ export function GatheringDetailDialog({
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-3 text-sm">
-              <DetailRow label="일시">
-                {new Date(gathering.starts_at).toLocaleString("ko-KR")} ·{" "}
-                {gathering.duration_min}분
-              </DetailRow>
-              <DetailRow label="장소">
-                📍 {gathering.place_name}
-                {gathering.city ? ` · ${gathering.city}` : ""}
-              </DetailRow>
-              <DetailRow label="정원">
-                최대 {gathering.max_participants}명
-              </DetailRow>
-              {gathering.vibe.length > 0 && (
-                <DetailRow label="분위기">
-                  <div className="flex flex-wrap gap-1">
-                    {gathering.vibe.map((v) => (
-                      <span
-                        key={v}
-                        className="rounded-full bg-muted px-2 py-0.5 text-xs"
-                      >
-                        {v}
-                      </span>
-                    ))}
+            {canChat ? (
+              <>
+                <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1 text-sm sm:hidden">
+                  <button
+                    type="button"
+                    onClick={() => setMobileView("details")}
+                    className={cn(
+                      "rounded-md py-1.5 transition-colors",
+                      mobileView === "details"
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground",
+                    )}
+                  >
+                    상세
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMobileView("chat")}
+                    className={cn(
+                      "rounded-md py-1.5 transition-colors",
+                      mobileView === "chat"
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground",
+                    )}
+                  >
+                    채팅
+                  </button>
+                </div>
+
+                <div className="grid min-h-0 sm:grid-cols-[1fr_1px_minmax(260px,1fr)] sm:gap-4">
+                  <div
+                    className={cn(
+                      "min-h-0",
+                      mobileView !== "details" && "hidden sm:block",
+                    )}
+                  >
+                    <DetailsBlock gathering={gathering} />
                   </div>
-                </DetailRow>
-              )}
-              {gathering.description && (
-                <DetailRow label="설명">
-                  <p className="whitespace-pre-wrap text-muted-foreground">
-                    {gathering.description}
-                  </p>
-                </DetailRow>
-              )}
-            </div>
+                  <div className="hidden sm:block bg-border" />
+                  <div
+                    className={cn(
+                      "h-[55vh] min-h-0 sm:h-[60vh]",
+                      mobileView !== "chat" && "hidden sm:block",
+                    )}
+                  >
+                    <GatheringChatPanel
+                      gatheringId={gathering.id}
+                      enabled={open}
+                    />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <DetailsBlock gathering={gathering} />
+            )}
 
             <DialogFooter>
               {isHost ? (
@@ -169,6 +206,43 @@ export function GatheringDetailDialog({
         )}
       </DialogContent>
     </Dialog>
+  )
+}
+
+function DetailsBlock({ gathering }: { gathering: GatheringPublic }) {
+  return (
+    <div className="space-y-3 text-sm">
+      <DetailRow label="일시">
+        {new Date(gathering.starts_at).toLocaleString("ko-KR")} ·{" "}
+        {gathering.duration_min}분
+      </DetailRow>
+      <DetailRow label="장소">
+        📍 {gathering.place_name}
+        {gathering.city ? ` · ${gathering.city}` : ""}
+      </DetailRow>
+      <DetailRow label="정원">최대 {gathering.max_participants}명</DetailRow>
+      {gathering.vibe.length > 0 && (
+        <DetailRow label="분위기">
+          <div className="flex flex-wrap gap-1">
+            {gathering.vibe.map((v) => (
+              <span
+                key={v}
+                className="rounded-full bg-muted px-2 py-0.5 text-xs"
+              >
+                {v}
+              </span>
+            ))}
+          </div>
+        </DetailRow>
+      )}
+      {gathering.description && (
+        <DetailRow label="설명">
+          <p className="whitespace-pre-wrap text-muted-foreground">
+            {gathering.description}
+          </p>
+        </DetailRow>
+      )}
+    </div>
   )
 }
 
