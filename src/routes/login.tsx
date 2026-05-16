@@ -1,36 +1,19 @@
-import { zodResolver } from "@hookform/resolvers/zod"
-import {
-  createFileRoute,
-  Link as RouterLink,
-  redirect,
-} from "@tanstack/react-router"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
+import { createFileRoute, redirect } from "@tanstack/react-router"
+import { useState } from "react"
 
-import type { Body_login_login_access_token as AccessToken } from "@/client"
+import { LoginForm } from "@/components/Auth/LoginForm"
+import { SignupForm } from "@/components/Auth/SignupForm"
 import { AuthLayout } from "@/components/Common/AuthLayout"
+import { Button } from "@/components/ui/button"
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { LoadingButton } from "@/components/ui/loading-button"
-import { PasswordInput } from "@/components/ui/password-input"
-import useAuth, { isLoggedIn } from "@/hooks/useAuth"
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { isLoggedIn } from "@/hooks/useAuth"
 
-const formSchema = z.object({
-  username: z.string().email(),
-  password: z
-    .string()
-    .min(1, { message: "Password is required" })
-    .min(8, { message: "Password must be at least 8 characters" }),
-}) satisfies z.ZodType<AccessToken>
-
-type FormData = z.infer<typeof formSchema>
+type AuthDialog = "login" | "signup" | null
 
 export const Route = createFileRoute("/login")({
   component: Login,
@@ -51,84 +34,49 @@ export const Route = createFileRoute("/login")({
 })
 
 function Login() {
-  const { loginMutation } = useAuth()
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    mode: "onBlur",
-    criteriaMode: "all",
-    defaultValues: {
-      username: "",
-      password: "",
-    },
-  })
-
-  const onSubmit = (data: FormData) => {
-    if (loginMutation.isPending) return
-    loginMutation.mutate(data)
-  }
+  const [dialog, setDialog] = useState<AuthDialog>(null)
+  const close = () => setDialog(null)
 
   return (
     <AuthLayout>
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="flex flex-col gap-6"
+      <div className="flex flex-col gap-3">
+        <Button size="lg" className="w-full" onClick={() => setDialog("login")}>
+          Log In
+        </Button>
+        <Button
+          size="lg"
+          variant="outline"
+          className="w-full"
+          onClick={() => setDialog("signup")}
         >
-          <div className="flex flex-col items-center gap-2 text-center">
-            <h1 className="text-2xl font-bold">Login to your account</h1>
-          </div>
+          Sign Up
+        </Button>
+      </div>
 
-          <div className="grid gap-4">
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      data-testid="email-input"
-                      placeholder="user@example.com"
-                      type="email"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage className="text-xs" />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <PasswordInput
-                      data-testid="password-input"
-                      placeholder="Password"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage className="text-xs" />
-                </FormItem>
-              )}
-            />
-
-            <LoadingButton type="submit" loading={loginMutation.isPending}>
-              Log In
-            </LoadingButton>
-          </div>
-
-          <div className="text-center text-sm">
-            Don't have an account yet?{" "}
-            <RouterLink to="/signup" className="underline underline-offset-4">
-              Sign up
-            </RouterLink>
-          </div>
-        </form>
-      </Form>
+      <Dialog open={dialog !== null} onOpenChange={(open) => !open && close()}>
+        <DialogContent className="sm:max-w-sm">
+          {dialog === "login" && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-center">
+                  Login to your account
+                </DialogTitle>
+              </DialogHeader>
+              <LoginForm onSwitchToSignup={() => setDialog("signup")} />
+            </>
+          )}
+          {dialog === "signup" && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-center">
+                  Create an account
+                </DialogTitle>
+              </DialogHeader>
+              <SignupForm onSwitchToLogin={() => setDialog("login")} />
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </AuthLayout>
   )
 }

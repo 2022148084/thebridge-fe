@@ -5,13 +5,8 @@ import {
   useLocation,
 } from "@tanstack/react-router"
 
-import { Footer } from "@/components/Common/Footer"
-import AppSidebar from "@/components/Sidebar/AppSidebar"
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar"
+import { Appearance } from "@/components/Common/Appearance"
+import { BottomNav } from "@/components/Nav/BottomNav"
 import { isLoggedIn } from "@/hooks/useAuth"
 
 export const Route = createFileRoute("/_layout")({
@@ -32,28 +27,23 @@ function Layout() {
   const fullscreen = FULLSCREEN_PATHS.has(pathname)
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b px-4">
-          <SidebarTrigger className="-ml-1 text-muted-foreground" />
-        </header>
-        {fullscreen ? (
-          <main className="flex-1 overflow-hidden">
+    <div className="flex min-h-svh flex-col">
+      <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-end border-b bg-background px-4">
+        <Appearance />
+      </header>
+      {fullscreen ? (
+        <main className="flex-1 overflow-hidden">
+          <Outlet />
+        </main>
+      ) : (
+        <main className="flex-1 p-6 md:p-8">
+          <div className="mx-auto max-w-7xl">
             <Outlet />
-          </main>
-        ) : (
-          <>
-            <main className="flex-1 p-6 md:p-8">
-              <div className="mx-auto max-w-7xl">
-                <Outlet />
-              </div>
-            </main>
-            <Footer />
-          </>
-        )}
-      </SidebarInset>
-    </SidebarProvider>
+          </div>
+        </main>
+      )}
+      <BottomNav />
+    </div>
   )
 }
 

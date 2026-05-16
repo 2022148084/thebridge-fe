@@ -42,7 +42,7 @@ export function Logo({
           className,
         )}
       >
-        {variant === "full" ? "Hackathon" : "HT"}
+        {variant === "full" ? "Wellness Together" : "HT"}
       </span>
     )
 
