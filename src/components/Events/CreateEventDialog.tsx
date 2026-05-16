@@ -35,6 +35,7 @@ import {
 import { Slider } from "@/components/ui/slider"
 import useCustomToast from "@/hooks/useCustomToast"
 import { cn } from "@/lib/utils"
+import { PlaceAutocomplete } from "./PlaceAutocomplete"
 
 const CATEGORIES = [
   "러닝",
@@ -68,7 +69,10 @@ const formSchema = z.object({
   title: z.string().min(1, { message: "제목을 입력해 주세요." }),
   category: z.enum(CATEGORIES, { message: "카테고리를 선택해 주세요." }),
   date: z.string().min(1, { message: "날짜와 시간을 선택해 주세요." }),
-  location: z.string().min(1, { message: "장소를 입력해 주세요." }),
+  place_name: z.string().min(1, { message: "장소를 선택해 주세요." }),
+  city: z.string().min(1),
+  lat: z.number(),
+  lng: z.number(),
   description: z.string().max(500).optional(),
   capacity: z.coerce
     .number()
@@ -103,7 +107,10 @@ const CreateEventDialog = ({ trigger, onCreated }: CreateEventDialogProps) => {
       title: "",
       category: undefined,
       date: "",
-      location: "",
+      place_name: "",
+      city: "",
+      lat: 0,
+      lng: 0,
       description: "",
       capacity: 0,
       energyLevel: 50,
@@ -126,7 +133,13 @@ const CreateEventDialog = ({ trigger, onCreated }: CreateEventDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-5xl">
+      <DialogContent
+        className="sm:max-w-5xl"
+        onInteractOutside={(e) => {
+          const target = e.detail.originalEvent.target as HTMLElement | null
+          if (target?.closest?.(".pac-container")) e.preventDefault()
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Event generation</DialogTitle>
           <DialogDescription>
@@ -209,22 +222,40 @@ const CreateEventDialog = ({ trigger, onCreated }: CreateEventDialogProps) => {
 
                   <FormField
                     control={form.control}
-                    name="location"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Location <span className="text-destructive">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="예) 반포 한강공원 잠수교 앞"
-                            type="text"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    name="place_name"
+                    render={({ field }) => {
+                      const city = form.watch("city")
+                      return (
+                        <FormItem>
+                          <FormLabel>
+                            Location <span className="text-destructive">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <PlaceAutocomplete
+                              placeholder="예) 반포 한강공원 잠수교"
+                              defaultValue={field.value}
+                              onPlaceSelect={(p) => {
+                                form.setValue("place_name", p.place_name, {
+                                  shouldValidate: true,
+                                })
+                                form.setValue("city", p.city, {
+                                  shouldValidate: true,
+                                })
+                                form.setValue("lat", p.lat)
+                                form.setValue("lng", p.lng)
+                              }}
+                            />
+                          </FormControl>
+                          {field.value && (
+                            <p className="text-muted-foreground text-xs">
+                              📍 {field.value}
+                              {city ? ` · ${city}` : ""}
+                            </p>
+                          )}
+                          <FormMessage />
+                        </FormItem>
+                      )
+                    }}
                   />
 
                   <FormField

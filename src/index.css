@@ -122,3 +122,8 @@
     cursor: pointer;
   }
 }
+
+.pac-container {
+  pointer-events: auto !important;
+  z-index: 10000 !important;
+}

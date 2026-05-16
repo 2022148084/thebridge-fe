@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router"
 import {
   APIProvider,
   Map as GoogleMap,
+  InfoWindow,
   Marker,
   useMap,
 } from "@vis.gl/react-google-maps"
@@ -9,7 +10,9 @@ import { Plus, RefreshCw, Send, Sparkles, X } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
-import CreateEventDialog from "@/components/Events/CreateEventDialog"
+import CreateEventDialog, {
+  type CreateEventFormData,
+} from "@/components/Events/CreateEventDialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { type ChatMessage, loadMessages, saveMessages } from "@/lib/chatStorage"
@@ -30,6 +33,8 @@ const SEOUL = { lat: 37.5665, lng: 126.978 }
 
 type LatLng = { lat: number; lng: number }
 
+type CreatedEvent = CreateEventFormData & { id: string }
+
 function MapPage() {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
   const [pos, setPos] = useState<LatLng | null>(null)
@@ -37,6 +42,8 @@ function MapPage() {
   const [chatOpen, setChatOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>(loadMessages)
   const [input, setInput] = useState("")
+  const [events, setEvents] = useState<CreatedEvent[]>([])
+  const [selectedId, setSelectedId] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -122,6 +129,47 @@ function MapPage() {
                 }}
               />
             )}
+            {events.map((e) => (
+              <Marker
+                key={e.id}
+                position={{ lat: e.lat, lng: e.lng }}
+                title={e.title}
+                icon={{
+                  path: google.maps.SymbolPath.CIRCLE,
+                  scale: 10,
+                  fillColor: "#EF4444",
+                  fillOpacity: 1,
+                  strokeColor: "#ffffff",
+                  strokeWeight: 2,
+                }}
+                onClick={() => setSelectedId(e.id)}
+              />
+            ))}
+            {(() => {
+              const e = events.find((x) => x.id === selectedId)
+              if (!e) return null
+              return (
+                <InfoWindow
+                  position={{ lat: e.lat, lng: e.lng }}
+                  pixelOffset={[0, -16]}
+                  onCloseClick={() => setSelectedId(null)}
+                >
+                  <div className="space-y-1 text-sm">
+                    <div className="font-semibold">{e.title}</div>
+                    <div className="text-xs text-gray-600">
+                      {e.category} · 정원 {e.capacity}명
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      {new Date(e.date).toLocaleString("ko-KR")}
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      📍 {e.place_name}
+                      {e.city ? ` · ${e.city}` : ""}
+                    </div>
+                  </div>
+                </InfoWindow>
+              )
+            })()}
             <FitToUser pos={pos} />
           </GoogleMap>
           <Button
@@ -135,6 +183,11 @@ function MapPage() {
             <RefreshCw className={loading ? "animate-spin" : ""} />
           </Button>
           <CreateEventDialog
+            onCreated={(data) => {
+              const id = crypto.randomUUID()
+              setEvents((prev) => [...prev, { ...data, id }])
+              setSelectedId(id)
+            }}
             trigger={
               <Button
                 size="icon"
