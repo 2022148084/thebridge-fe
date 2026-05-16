@@ -32,7 +32,7 @@ function Layout() {
         <Appearance />
       </header>
       {fullscreen ? (
-        <main className="flex-1 overflow-hidden">
+        <main className="h-[calc(100svh-3.5rem-4rem)] overflow-hidden">
           <Outlet />
         </main>
       ) : (
