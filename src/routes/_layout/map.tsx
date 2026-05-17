@@ -1,16 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-import {
-  APIProvider,
-  Map as GoogleMap,
-  Marker,
-  useMap,
-} from "@vis.gl/react-google-maps"
+import { Map as GoogleMap, Marker, useMap } from "@vis.gl/react-google-maps"
 import { MessageCircle, RefreshCw, Send, X } from "lucide-react"
 import { Fragment, useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
 import {
+  ApiError,
   type ChatHistoryPublic,
   type ChatMessagePublic,
   ChatService,
@@ -86,7 +82,15 @@ function MapPage() {
     queryKey: ["gatherings"],
     queryFn: () => GatheringsService.readGatherings(),
   })
-  const events = gatheringsData?.data ?? []
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 60_000)
+    return () => window.clearInterval(id)
+  }, [])
+  const events = (gatheringsData?.data ?? []).filter(
+    (g) =>
+      new Date(g.starts_at).getTime() + (g.duration_min ?? 0) * 60_000 > now,
+  )
 
   const locationMapQuery = useQuery({
     queryKey: LOCATION_MAP_KEY,
@@ -115,7 +119,19 @@ function MapPage() {
 
   const chatHistoryQuery = useQuery({
     queryKey: CHAT_HISTORY_KEY,
-    queryFn: () => ChatService.getChatHistory(),
+    queryFn: async () => {
+      try {
+        return await ChatService.getChatHistory()
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 404) {
+          return { data: [] } as ChatHistoryPublic
+        }
+        throw err
+      }
+    },
+    enabled: chatOpen,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   })
   const cutoff =
     typeof window === "undefined"
@@ -146,6 +162,12 @@ function MapPage() {
       return { previous }
     },
     onSuccess: (response) => {
+      queryClient.setQueryData<ChatHistoryPublic>(CHAT_HISTORY_KEY, (old) => {
+        const existing = old?.data ?? []
+        return {
+          data: [...existing, response.message],
+        }
+      })
       if (response.recommendations && response.recommendations.length > 0) {
         setRecommendationsByMsg((prev) => ({
           ...prev,
@@ -157,9 +179,6 @@ function MapPage() {
       if (ctx?.previous) {
         queryClient.setQueryData(CHAT_HISTORY_KEY, ctx.previous)
       }
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: CHAT_HISTORY_KEY })
     },
     meta: { errorMessage: "메시지 전송에 실패했어요" },
   })
@@ -238,57 +257,55 @@ function MapPage() {
   return (
     <div className="flex h-full w-full overflow-hidden">
       <div className="relative h-full flex-1">
-        <APIProvider apiKey={apiKey}>
-          <GoogleMap
-            defaultCenter={SEOUL}
-            defaultZoom={12}
-            gestureHandling="greedy"
-            disableDefaultUI={false}
-            streetViewControl={false}
-            fullscreenControl={false}
-            mapTypeControl={false}
-            rotateControl={false}
-            cameraControl={false}
-            isFractionalZoomEnabled
-            styles={[{ featureType: "poi", stylers: [{ visibility: "off" }] }]}
+        <GoogleMap
+          defaultCenter={SEOUL}
+          defaultZoom={12}
+          gestureHandling="greedy"
+          disableDefaultUI={false}
+          streetViewControl={false}
+          fullscreenControl={false}
+          mapTypeControl={false}
+          rotateControl={false}
+          cameraControl={false}
+          isFractionalZoomEnabled
+          styles={[{ featureType: "poi", stylers: [{ visibility: "off" }] }]}
+        >
+          <MapMarkers
+            pos={pos}
+            friends={friendLocations}
+            events={events}
+            onEventClick={setSelectedId}
+          />
+          <FitToUser pos={pos} />
+        </GoogleMap>
+        <Button
+          variant="secondary"
+          size="icon"
+          className="absolute top-3 right-3 z-10 rounded-full border border-[#b3b9c2]/40 bg-white/85 text-[#161b24] shadow-[0_4px_12px_-4px_rgba(0,0,0,0.15)] backdrop-blur-[8px] hover:bg-white"
+          onClick={fetchLocation}
+          disabled={loading}
+          aria-label="현재 위치 새로고침"
+        >
+          <RefreshCw className={loading ? "animate-spin" : ""} />
+        </Button>
+        {!chatOpen && (
+          <button
+            type="button"
+            onClick={() => setChatOpen(true)}
+            aria-label="AI 챗봇 열기"
+            className="absolute right-4 bottom-4 z-10 flex w-[130px] flex-col items-center rounded-[20px] border border-[#b3b9c2]/40 bg-white/86 px-2 pt-2 pb-1 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.2)] backdrop-blur-[12px] transition hover:bg-white"
           >
-            <MapMarkers
-              pos={pos}
-              friends={friendLocations}
-              events={events}
-              onEventClick={setSelectedId}
+            <span className="flex items-center gap-1.5 font-['Stack_Sans_Headline'] text-[14px] font-medium text-[#161b24]">
+              AI Coach
+              <MessageCircle className="size-3.5 text-[#161b24]/70" />
+            </span>
+            <img
+              src="/assets/images/ai-coach-avatar.png"
+              alt="AI Coach"
+              className="-mt-1 size-[110px] object-contain"
             />
-            <FitToUser pos={pos} />
-          </GoogleMap>
-          <Button
-            variant="secondary"
-            size="icon"
-            className="absolute top-3 right-3 z-10 rounded-full border border-[#b3b9c2]/40 bg-white/85 text-[#161b24] shadow-[0_4px_12px_-4px_rgba(0,0,0,0.15)] backdrop-blur-[8px] hover:bg-white"
-            onClick={fetchLocation}
-            disabled={loading}
-            aria-label="현재 위치 새로고침"
-          >
-            <RefreshCw className={loading ? "animate-spin" : ""} />
-          </Button>
-          {!chatOpen && (
-            <button
-              type="button"
-              onClick={() => setChatOpen(true)}
-              aria-label="AI 챗봇 열기"
-              className="absolute right-4 bottom-4 z-10 flex w-[130px] flex-col items-center rounded-[20px] border border-[#b3b9c2]/40 bg-white/86 px-2 pt-2 pb-1 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.2)] backdrop-blur-[12px] transition hover:bg-white"
-            >
-              <span className="flex items-center gap-1.5 font-['Stack_Sans_Headline'] text-[14px] font-medium text-[#161b24]">
-                AI Coach
-                <MessageCircle className="size-3.5 text-[#161b24]/70" />
-              </span>
-              <img
-                src="/assets/images/ai-coach-avatar.png"
-                alt="AI Coach"
-                className="-mt-1 size-[110px] object-contain"
-              />
-            </button>
-          )}
-        </APIProvider>
+          </button>
+        )}
         <GatheringDetailDialog
           gatheringId={selectedId}
           joined={selectedId !== null && hasJoined(selectedId)}
